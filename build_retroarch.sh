@@ -50,11 +50,17 @@ while read RETROARCH_CORE; do
       printf "\n  ${RETROARCH_CORE} libretro was not added!\n"
     fi
     sudo wget -t 3 -T 30 --no-check-certificate https://github.com/libretro/libretro-core-info/raw/refs/heads/master/"$RETROARCH_CORE"_libretro.info -O Arkbuild/home/ark/.config/retroarch/cores/"$RETROARCH_CORE"_libretro.info
+    if [ $? -ne 0 ]; then
+      if [ -f "core_info_files/${RETROARCH_CORE}_libretro.info" ]; then
+	    sudo cp core_info_files/"$RETROARCH_CORE"_libretro.info Arkbuild/home/ark/.config/retroarch/cores/"$RETROARCH_CORE"_libretro.info
+      fi
+    fi
   fi
 done <retroarch_cores.txt
 
 # Copy other core info files not available from libretro's repo
-sudo cp core_info_files/* Arkbuild/home/ark/.config/retroarch/cores/
+#sudo cp core_info_files/* Arkbuild/home/ark/.config/retroarch/cores/
+#sudo cp core_info_files/* Arkbuild/home/ark/.config/retroarch32/cores/
 
 # Download and add retroarch assets
 sudo git clone --depth=1 https://github.com/libretro/retroarch-assets.git Arkbuild/home/ark/.config/retroarch/assets/
@@ -115,7 +121,12 @@ while read RETROARCH_CORE32; do
     else
       printf "\n  ${RETROARCH_CORE32} libretro was not added!\n"
     fi
-    sudo wget -t 3 -T 30 --no-check-certificate https://github.com/libretro/libretro-core-info/raw/refs/heads/master/"$RETROARCH_CORE32"_libretro.info -O Arkbuild/home/ark/.config/retroarch/cores/"$RETROARCH_CORE32"_libretro.info
+    sudo wget -t 3 -T 30 --no-check-certificate https://github.com/libretro/libretro-core-info/raw/refs/heads/master/"$RETROARCH_CORE32"_libretro.info -O Arkbuild/home/ark/.config/retroarch32/cores/"$RETROARCH_CORE32"_libretro.info
+    if [ $? -ne 0 ]; then
+      if [ -f "core_info_files/${RETROARCH_CORE32}_libretro.info" ]; then
+	    sudo cp core_info_files/"$RETROARCH_CORE32"_libretro.info Arkbuild/home/ark/.config/retroarch32/cores/"$RETROARCH_CORE32"_libretro.info
+      fi
+    fi
   fi
 done <retroarch_cores32.txt
 

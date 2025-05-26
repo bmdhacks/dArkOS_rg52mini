@@ -16,6 +16,7 @@ libnl-3-dev
 libnl-genl-3-dev
 libnl-route-3-dev
 libopenal-dev
+libpng-dev
 libsdl2-image-dev
 libsdl2-mixer-dev
 libsdl2-ttf-dev

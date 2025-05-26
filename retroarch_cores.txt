@@ -2,6 +2,8 @@
 ecwolf
 fbneo
 fceumm
+flycast
+flycast_rumble
 gambatte
 gpsp
 mgba

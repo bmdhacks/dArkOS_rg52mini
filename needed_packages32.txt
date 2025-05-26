@@ -3,6 +3,7 @@ espeak-ng
 liba52-0.7.4
 libarchive-zip-perl
 libasound2
+libevdev2
 libfaad2
 libfreetype6
 liblzma5

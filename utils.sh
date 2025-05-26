@@ -63,14 +63,14 @@ function setup_arkbuild32() {
     sudo chroot Arkbuild32/ ldconfig
     setup_ark_user 32
     sudo mkdir -p Arkbuild32/home/ark
-	sudo chroot Arkbuild32/ umount /proc
-	source build_deps.sh 32
-	source build_sdl2.sh 32
-	sudo cp -a Arkbuild32/usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.${extension} Arkbuild/usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.${extension}
-	sudo chroot Arkbuild/ bash -c "ln -sfv /usr/lib/arm-linux-gnueabihf/libSDL2.so /usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0"
+    sudo chroot Arkbuild32/ umount /proc
+    source build_deps.sh 32
+    source build_sdl2.sh 32
+    sudo cp -a Arkbuild32/usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.${extension} Arkbuild/usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.${extension}
+    sudo chroot Arkbuild/ bash -c "ln -sfv /usr/lib/arm-linux-gnueabihf/libSDL2.so /usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0"
     sudo chroot Arkbuild/ bash -c "ln -sfv /usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.${extension} /usr/lib/arm-linux-gnueabihf/libSDL2.so"
-	sudo cp -a Arkbuild32/home/ark/linux-rga/build/librga.so* Arkbuild/usr/lib/arm-linux-gnueabihf/
-	sudo cp -a Arkbuild32/home/ark/libgo2/libgo2.so* Arkbuild/usr/lib/arm-linux-gnueabihf/
+    sudo cp -a Arkbuild32/home/ark/linux-rga/build/librga.so* Arkbuild/usr/lib/arm-linux-gnueabihf/
+    sudo cp -a Arkbuild32/home/ark/libgo2/libgo2.so* Arkbuild/usr/lib/arm-linux-gnueabihf/
   fi
 }
 
@@ -80,6 +80,8 @@ function remove_arkbuild() {
     if grep -qs "Arkbuild/${m} " /proc/mounts; then
       sudo umount Arkbuild/${m}
       verify_action
+      sync
+      sleep 5
     fi
   done
   sudo rm -rf Arkbuild/home/ark/Arkbuild_ccache
@@ -93,6 +95,8 @@ function remove_arkbuild32() {
     if grep -qs "Arkbuild32/${m} " /proc/mounts; then
       sudo umount Arkbuild32/${m}
       verify_action
+      sync
+      sleep 5
     fi
   done
   [ -d "Arkbuild32" ] && sudo umount Arkbuild32
