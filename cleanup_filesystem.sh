@@ -43,6 +43,7 @@ sudo chroot Arkbuild/ bash -c "apt-get remove -y autotools-dev \
   libsdl2-mixer-dev \
   libsdl2-ttf-dev \
   libsm-dev \
+  libsoxr-dev \
   libspeechd-dev \
   libstdc++-12-dev \
   libtheora-dev \

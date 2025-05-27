@@ -78,7 +78,7 @@ function remove_arkbuild() {
   for m in home/ark/Arkbuild_ccache proc dev/pts dev dev sys
   do
     if grep -qs "Arkbuild/${m} " /proc/mounts; then
-      sudo umount Arkbuild/${m}
+      sudo umount -l Arkbuild/${m}
       verify_action
       sync
       sleep 1
@@ -93,7 +93,7 @@ function remove_arkbuild32() {
   for m in home/ark/Arkbuild_ccache proc dev/pts dev sys
   do
     if grep -qs "Arkbuild32/${m} " /proc/mounts; then
-      sudo umount Arkbuild32/${m}
+      sudo umount -l Arkbuild32/${m}
       verify_action
       sync
       sleep 1
