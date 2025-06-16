@@ -106,7 +106,7 @@ sudo cp -a Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch/gfx/video_filter
 sudo cp -a Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch/gfx/video_filters/*.filt Arkbuild/home/ark/.config/retroarch32/filters/video/
 sudo cp -a Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch/libretro-common/audio/dsp_filters/*.so Arkbuild/home/ark/.config/retroarch32/filters/audio/
 sudo cp -a Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch/libretro-common/audio/dsp_filters/*.dsp Arkbuild/home/ark/.config/retroarch32/filters/audio/
-sudo cp -a retroarch32/configs/retroarch.cfg.rg353m Arkbuild/home/ark/.config/retroarch/retroarch.cfg
+sudo cp -a retroarch32/configs/retroarch.cfg.rg353m Arkbuild/home/ark/.config/retroarch32/retroarch.cfg
 sudo cp -a retroarch32/configs/retroarch.cfg.bak.rg353m Arkbuild/home/ark/.config/retroarch32/retroarch.cfg.bak
 sudo cp -a retroarch32/configs/retroarch-core-options.cfg.rg353m Arkbuild/home/ark/.config/retroarch32/retroarch-core-options.cfg
 sudo cp -a retroarch32/configs/retroarch-core-options.cfg.bak.rg353m Arkbuild/home/ark/.config/retroarch32/retroarch-core-options.cfg.bak

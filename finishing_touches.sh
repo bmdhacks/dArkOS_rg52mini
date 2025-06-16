@@ -83,6 +83,16 @@ sudo cp -f scripts/10-help-text Arkbuild/etc/update-motd.d/10-help-text
 sudo rm -f Arkbuild/etc/motd
 sudo chmod 777 Arkbuild/etc/update-motd.d/*
 
+# Disable some unneeded interfaces in NetworkManager
+cat <<EOF | sudo tee -a Arkbuild/etc/NetworkManager/NetworkManager.conf
+
+[device]
+wifi.scan-rand-mac-address=no
+
+[keyfile]
+unmanaged-devices=interface-name:p2p0;interface-name:ap0
+EOF
+
 # Default set timezone to New York
 sudo chroot Arkbuild/ bash -c "ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime"
 
@@ -104,6 +114,7 @@ sudo cp scripts/speak_bat_life.sh Arkbuild/usr/local/bin/
 sudo cp scripts/spktoggle.sh Arkbuild/usr/local/bin/
 sudo cp scripts/timezones Arkbuild/usr/local/bin/
 sudo cp global/* Arkbuild/usr/local/bin/
+sudo cp -R mbrola Arkbuild/usr/share/
 sudo cp device/rgb10/* Arkbuild/usr/local/bin/
 
 # Make all scripts in /usr/local/bin executable, world style

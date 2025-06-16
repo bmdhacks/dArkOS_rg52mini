@@ -1,5 +1,7 @@
 #!/bin/bash
-sudo umount /roms
+if mountpoint -q /roms; then
+  sudo umount /roms
+fi
 #sudo ln -s /dev/mmcblk0 /dev/hda
 #sudo ln -s /dev/mmcblk0p3 /dev/hda3
 sudo chmod 666 /dev/tty1

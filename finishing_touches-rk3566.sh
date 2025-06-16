@@ -37,6 +37,15 @@ sudo chmod 777 Arkbuild/usr/lib/systemd/system-sleep/sleep
 # Set performance governor to ondemand on boot
 sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/perfnorm quiet &\") | crontab -"
 
+# Set DRM on boot
+sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/hdmi-test.sh &\") | crontab -"
+
+# Restore screen colors, saturation and such on boot
+#sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/panel_set.sh RestoreSettings &\") | crontab -"
+
+# Find and record panel id on boot
+sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot dmesg | grep 'panel id' > /home/ark/.config/.panel_info &\") | crontab -"
+
 # Speaker Toggle to set audio output to SPK on boot
 sudo mkdir -p Arkbuild/usr/local/bin
 sudo cp scripts/spktoggle.sh Arkbuild/usr/local/bin/
@@ -69,6 +78,16 @@ sudo cp -f scripts/10-help-text Arkbuild/etc/update-motd.d/10-help-text
 sudo rm -f Arkbuild/etc/motd
 sudo chmod 777 Arkbuild/etc/update-motd.d/*
 
+# Disable some unneeded interfaces in NetworkManager
+cat <<EOF | sudo tee -a Arkbuild/etc/NetworkManager/NetworkManager.conf
+
+[device]
+wifi.scan-rand-mac-address=no
+
+[keyfile]
+unmanaged-devices=interface-name:p2p0;interface-name:ap0
+EOF
+
 # Default set timezone to New York
 sudo chroot Arkbuild/ bash -c "ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime"
 
@@ -81,6 +100,12 @@ sudo chmod -R 777 Arkbuild/opt/system/
 # Copy performance scripts
 sudo cp scripts/perf* Arkbuild/usr/local/bin/
 
+# Disable power saving for 8821cs wifi chip
+cat <<EOF | sudo tee Arkbuild/etc/modprobe.d/8821cs.conf
+# Disable power saving
+options 8821cs rtw_power_mgnt=0 rtw_enusbss=0 rtw_ips_mode=0
+EOF
+
 # Copy various other backend tools
 sudo cp scripts/checkbrightonboot Arkbuild/usr/local/bin/
 sudo cp scripts/current_* Arkbuild/usr/local/bin/
@@ -88,8 +113,18 @@ sudo cp scripts/finish.sh Arkbuild/usr/local/bin/
 sudo cp scripts/pause.sh Arkbuild/usr/local/bin/
 sudo cp scripts/speak_bat_life.sh Arkbuild/usr/local/bin/
 sudo cp scripts/spktoggle.sh Arkbuild/usr/local/bin/
+sudo cp scripts/volume.sh Arkbuild/usr/local/bin/
+sudo cp scripts/hdmi-test.sh Arkbuild/usr/local/bin/
+sudo cp scripts/panel_set.sh Arkbuild/usr/local/bin/
+sudo cp scripts/panel_id.sh Arkbuild/usr/local/bin/
 sudo cp scripts/timezones Arkbuild/usr/local/bin/
+sudo cp scripts/Sleep* Arkbuild/usr/local/bin/
+sudo cp scripts/Switch* Arkbuild/usr/local/bin/
+sudo cp scripts/Fix* Arkbuild/usr/local/bin/
+sudo cp -R mbrola Arkbuild/usr/share/
 sudo cp global/* Arkbuild/usr/local/bin/
+sudo cp device/rk3566/uboot.img.anbernic Arkbuild/usr/local/bin/
+sudo cp device/rk3566/uboot.img Arkbuild/usr/local/bin/uboot.img.jelos
 #sudo cp device/rgb10/* Arkbuild/usr/local/bin/
 
 # Make all scripts in /usr/local/bin executable, world style

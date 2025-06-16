@@ -133,6 +133,10 @@ function install_package() {
      sudo chroot ${CHROOT_DIR}/ dpkg -s "${libs}${NEEDED_ARCH}" &>/dev/null
      if [[ $? != "0" ]]; then
        if [[ "$updateapt" == "N" ]]; then
+         if test -z "$(cat ${CHROOT_DIR}/etc/apt/sources.list | grep contrib)"
+         then
+           sudo sed -i '/main/s//main contrib non-free/' ${CHROOT_DIR}/etc/apt/sources.list
+		 fi
          sudo chroot ${CHROOT_DIR}/ apt-get -y update
          updateapt="Y"
        fi

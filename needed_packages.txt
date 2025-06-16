@@ -1,6 +1,7 @@
 alsa-utils
 brightnessctl
 ccache
+cloud-guest-utils
 cmake
 console-setup
 dialog
@@ -10,7 +11,7 @@ exfatprogs
 ffmpeg
 fonts-noto-cjk
 git
-cloud-guest-utils
+iw
 liba52-0.7.4
 libarchive-zip-perl
 libasound2
@@ -34,6 +35,10 @@ libtool
 libtool-bin
 libudev1
 libxkbcommon0
+mbrola
+mbrola-us1
+mbrola-us2
+mbrola-us3
 ninja-build
 p7zip-full
 premake4
@@ -44,6 +49,7 @@ python3-pip
 python3-setuptools
 python3-urwid
 python3-wheel
+rfkill
 rustc
 tar
 unzip

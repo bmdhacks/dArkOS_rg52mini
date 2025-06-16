@@ -41,8 +41,9 @@ source ./build_xroar.sh
 source ./build_ogage.sh
 source ./build_351files.sh
 source ./build_filebrowser.sh
-source ./build_wpasupplicant.sh
+#source ./build_wpasupplicant.sh
 source ./build_gptokeyb.sh
+source ./build_drmtool.sh
 source ./build_emulationstation-rk3566.sh
 source ./finishing_touches-rk3566.sh
 source ./cleanup_filesystem.sh
