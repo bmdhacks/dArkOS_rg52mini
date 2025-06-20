@@ -59,9 +59,18 @@ sudo chroot Arkbuild/ bash -c "systemctl enable audiostate"
 # Copy necessary tools for expansion of ROOTFS and convert fat32 games partition to exfat on initial boot
 sudo cp scripts/expandtoexfat.sh.${CHIPSET} ${mountpoint}/expandtoexfat.sh
 sudo cp scripts/firstboot.sh ${mountpoint}/firstboot.sh
-sudo cp scripts/fstab.exfat.${CHIPSET} ${mountpoint}/fstab.exfat
+#sudo cp scripts/fstab.exfat.${CHIPSET} ${mountpoint}/fstab.exfat
 sudo cp scripts/firstboot.service Arkbuild/etc/systemd/system/firstboot.service
 sudo chroot Arkbuild/ bash -c "systemctl enable firstboot"
+
+#Generate fstab to be used after EASYROMS expansion
+cat <<EOF | sudo tee ${mountpoint}/fstab.exfat
+/dev/mmcblk1p4  /  ${ROOT_FILESYSTEM_FORMAT}  defaults,noatime  0 1
+
+/dev/mmcblk1p3 /boot vfat defaults,noatime 0 0
+/dev/mmcblk1p5 /roms exfat defaults,auto,umask=000,uid=1002,gid=1002,noatime 0 0
+/roms/tools /opt/system/Tools none nofail,x-systemd.device-timeout=7,bind
+EOF
 
 # Disable getty on tty0 and tty1
 sudo chroot Arkbuild/ bash -c "systemctl disable getty@tty0.service getty@tty1.service"

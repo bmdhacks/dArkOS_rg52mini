@@ -64,9 +64,18 @@ sudo chroot Arkbuild/ bash -c "systemctl enable audiostate"
 # Copy necessary tools for expansion of ROOTFS and convert fat32 games partition to exfat on initial boot
 sudo cp scripts/expandtoexfat.sh.${CHIPSET} ${mountpoint}/expandtoexfat.sh
 sudo cp scripts/firstboot.sh ${mountpoint}/firstboot.sh
-sudo cp scripts/fstab.exfat.${CHIPSET} ${mountpoint}/fstab.exfat
+#sudo cp scripts/fstab.exfat.${CHIPSET} ${mountpoint}/fstab.exfat
 sudo cp scripts/firstboot.service Arkbuild/etc/systemd/system/firstboot.service
 sudo chroot Arkbuild/ bash -c "systemctl enable firstboot"
+
+#Generate fstab to be used after EASYROMS expansion
+cat <<EOF | sudo tee ${mountpoint}/fstab.exfat
+LABEL=ROOTFS / ${ROOT_FILESYSTEM_FORMAT} defaults, noatime 0 1
+
+LABEL=BOOT /boot vfat defaults 0 2
+LABEL=EASYROMS /roms exfat defaults,auto,umask=000,uid=1000,gid=1000,noatime 0 0
+/roms/tools /opt/system/Tools none bind
+EOF
 
 # Disable getty on tty0 and tty1
 sudo chroot Arkbuild/ bash -c "systemctl disable getty@tty0.service getty@tty1.service"
@@ -141,7 +150,7 @@ sudo losetup -d ${LOOP_BOOT}
 # Format rootfs partition in final image
 ROOTFS_PART_OFFSET=$((STORAGE_PART_START * 512))
 LOOP_ROOTFS=$(sudo losetup --find --show --offset ${ROOTFS_PART_OFFSET} ${DISK})
-sudo mkfs.ext4 -F -L ROOTFS ${LOOP_ROOTFS}
+sudo mkfs.${ROOT_FILESYSTEM_FORMAT} -F -L ROOTFS ${LOOP_ROOTFS}
 sudo losetup -d ${LOOP_ROOTFS}
 
 # Format ROMS partition in final image

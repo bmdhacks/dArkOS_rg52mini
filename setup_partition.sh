@@ -2,6 +2,7 @@
 
 echo -e "Creating partitions...\n\n"
 # Partition setup
+ROOT_FILESYSTEM_FORMAT="xfs"
 SYSTEM_SIZE=100      # FAT32 boot partition size in MB
 STORAGE_SIZE=7168    # Root filesystem size in MB
 ROM_PART_SIZE=512    # FAT32 ROMS/shared partition size in MB
@@ -24,7 +25,7 @@ if [ -f "ArkOS_RGB10.img" ]; then
 fi
 
 dd if=/dev/zero of="${FILESYSTEM}" bs=1M count=0 seek="${BUILD_SIZE}" conv=fsync
-sudo mkfs.xfs -F -L ROOTFS "${FILESYSTEM}"
+sudo mkfs.${ROOT_FILESYSTEM_FORMAT} -F -L ROOTFS "${FILESYSTEM}"
 mkdir -p Arkbuild/
-sudo mount -t ext4 -o loop ${FILESYSTEM} Arkbuild/
+sudo mount -t ${ROOT_FILESYSTEM_FORMAT} -o loop ${FILESYSTEM} Arkbuild/
 

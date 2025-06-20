@@ -25,7 +25,6 @@ source ./utils.sh
 # Step-by-step build process
 source ./setup_partition-rk3566.sh
 source ./bootstrap_rootfs-rk3566.sh
-source ./image_setup-rk3566.sh
 source ./build_kernel-rk3566.sh
 source ./build_deps.sh
 source ./build_sdl2.sh

@@ -1,6 +1,7 @@
 #!/bin/bash
 #set -e
 
+ROOT_FILESYSTEM_FORMAT="xfs"
 DISK="ArkOS_RG353M.img"
 IMAGE_SIZE=7.5G
 SECTOR_SIZE=512
@@ -41,7 +42,7 @@ sleep 2
 
 # Format partitions where needed
 sudo mkfs.vfat -n ANBERNIC "${LOOP_DEV}p3"
-sudo mkfs.xfs -L rootfs "${LOOP_DEV}p4"
+sudo mkfs.${ROOT_FILESYSTEM_FORMAT} -L rootfs "${LOOP_DEV}p4"
 sudo mkfs.vfat -n ROMS "${LOOP_DEV}p5"
 
 # Copy content (example only)
@@ -62,9 +63,9 @@ sudo mkfs.vfat -n ROMS "${LOOP_DEV}p5"
 #sudo dd if=device/rk3566/resource.img of=$LOOP_DEV bs=$SECTOR_SIZE seek=24576 conv=notrunc
 
 dd if=/dev/zero of="${FILESYSTEM}" bs=1M count=0 seek="${BUILD_SIZE}" conv=fsync
-sudo mkfs.ext4 -F -L ROOTFS "${FILESYSTEM}"
+sudo mkfs.${ROOT_FILESYSTEM_FORMAT} -F -L ROOTFS "${FILESYSTEM}"
 mkdir -p Arkbuild/
-sudo mount -t ext4 -o loop ${FILESYSTEM} Arkbuild/
+sudo mount -t ${ROOT_FILESYSTEM_FORMAT} -o loop ${FILESYSTEM} Arkbuild/
 
 #sudo losetup -d $LOOP_DEV
 #echo "✅ ArkOS-like image created: $DISK"

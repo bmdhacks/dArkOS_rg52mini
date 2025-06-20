@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# Verify the correct toolchain is available
+if [ ! -d "/opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu" ]; then
+  sudo mkdir -p /opt/toolchains
+  wget https://releases.linaro.org/components/toolchain/binaries/6.3-2017.05/aarch64-linux-gnu/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu.tar.xz
+  verify_action
+  sudo tar Jxvf gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu.tar.xz -C /opt/toolchains/
+  rm gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu.tar.xz
+fi
+
+# Setup the necessary exports
+export ARCH=arm64
+export CROSS_COMPILE=aarch64-linux-gnu-
+export PATH=/opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/:$PATH
+
 function verify_action() {
   code=$?
   if [ $code != 0 ]; then
