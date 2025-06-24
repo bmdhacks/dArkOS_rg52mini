@@ -72,7 +72,7 @@ LaunchFake08() {
   sudo chmod 666 /dev/uinput
   cd /opt/fake08
 
-  sudo systemctl stop pico8hotkey
+  sudo systemctl stop killer_daemon.service
   export FAKE08_HOME="/home/ark/.config"
   export FAKE08_PICO8DIR="/$directory/pico-8"
   export SDL_GAMECONTROLLERCONFIG_FILE="/opt/inttools/gamecontrollerdb.txt"
@@ -126,7 +126,8 @@ elif [[ ! -f "/$directory/pico-8/pico8.dat" ]] &&  [[ "$1" != *"retroarch"* ]]; 
       LaunchFake08 "$2"
 fi
 
-sudo /opt/quitter/oga_controls $pico8executable $param_device &
+echo "VAR=$pico8executable" > /home/ark/.config/KILLIT
+sudo systemctl start killer_daemon.service
 
 if [ ! -d "/opt/pico-8/bbs" ]; then
   mkdir -p /opt/pico-8/bbs
@@ -161,9 +162,7 @@ if [ "$?" -eq "10" ]; then
    #mv -f /$directory/pico-8/bbs/carts/*.p8 /$directory/pico-8/carts/
    #mv -f /$directory/pico-8/bbs/carts/*.P8 /$directory/pico-8/carts/
 
-  if [[ ! -z $(pidof oga_controls) ]]; then
-    sudo kill -9 $(pidof oga_controls)
-  fi
+  sudo systemctl stop killer_daemon.service
   sudo systemctl restart ogage &
   exit 0
 fi
@@ -194,7 +193,5 @@ elif [[ $1 == "full-screen" ]]; then
 	fi
 fi
 
-if [[ ! -z $(pidof oga_controls) ]]; then
-  sudo kill -9 $(pidof oga_controls)
-fi
+sudo systemctl stop killer_daemon.service
 sudo systemctl restart ogage &

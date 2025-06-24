@@ -38,6 +38,7 @@ source ./build_retrorun.sh
 source ./build_yabasanshirosa.sh
 source ./build_mednafen.sh
 source ./build_ecwolfsa.sh
+source ./build_hypseus-singe.sh
 source ./build_scummvmsa.sh
 source ./build_fake08.sh
 source ./build_xroar.sh

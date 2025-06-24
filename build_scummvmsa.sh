@@ -19,9 +19,6 @@ sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/scummvm/NEWS.md Arkbuild/opt
 sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/scummvm/README.md Arkbuild/opt/scummvm/
 call_chroot "chown -R ark:ark /opt/"
 sudo chmod 777 Arkbuild/opt/scummvm/scummvm
-sudo cp scummvm/scummvmkeydemon.py.${UNIT} Arkbuild/usr/local/bin/scummvmkeydemon.py
-sudo cp scummvm/configs/scummvm.ini.${UNIT} Arkbuild/home/ark/.config/scummvm/scummvm.ini
 call_chroot "chown -R ark:ark /home/ark/.config/"
 sudo cp scummvm/scummvm.sh Arkbuild/usr/local/bin/scummvm.sh
 sudo chmod 777 Arkbuild/usr/local/bin/scummvm.sh
-sudo chmod 777 Arkbuild/usr/local/bin/scummvmkeydemon.py

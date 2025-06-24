@@ -7,6 +7,9 @@ flycast
 flycast_rumble
 gambatte
 gpsp
+mame
+mametiger
+mess
 mgba
 mgba_rumble
 mupen64plus

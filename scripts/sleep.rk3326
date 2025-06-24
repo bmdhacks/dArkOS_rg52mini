@@ -26,12 +26,8 @@ case $1 in
 	modprobe -i dwc2
 	sleep 2
 	# sudo systemctl restart ogage
-	systemctl is-active --quiet solarushotkey.service && sudo systemctl restart solarushotkey
-        systemctl is-active --quiet pico8hotkey.service && sudo systemctl restart pico8hotkey
-        systemctl is-active --quiet ppsspphotkey.service && sudo systemctl restart ppsspphotkey
-        systemctl is-active --quiet openborhotkey.service && sudo systemctl restart openborhotkey
-        systemctl is-active --quiet batt_led.service && sudo systemctl restart batt_led
-        systemctl is-active --quiet singehotkey.service && sudo systemctl restart singehotkey
+	systemctl is-active --quiet killer_daemon && sudo systemctl restart killer_daemon
+	systemctl is-active --quiet batt_led.service && sudo systemctl restart batt_led
 	if [ -f "/home/ark/.config/esp8089exists" ]; then
 		modprobe -i esp8089
 		rm /home/ark/.config/esp8089exists

@@ -30,17 +30,19 @@ then
 elif [[ $1 == "standalone" ]] && [[ ${2,,} != *"menu.scummvm"* ]]
 then
   cd /opt/scummvm
-  sudo /usr/local/bin/scummvmkeydemon.py &
+  echo "VAR=scummvm" > /home/ark/.config/KILLIT
+  sudo systemctl start killer_daemon.service
   DIR="$( cd "$( dirname "${2}" )" >/dev/null 2>&1 && pwd )/"
   ./scummvm --auto-detect --path="$DIR"
-  sudo killall python3
+  sudo systemctl stop killer_daemon.service
   sudo systemctl restart ogage &
 elif [[ $1 == "standalone" ]] && [[ ${2,,} == *"menu.scummvm"* ]]
 then
   cd /opt/scummvm
-  sudo /usr/local/bin/scummvmkeydemon.py &
+  echo "VAR=scummvm" > /home/ark/.config/KILLIT
+  sudo systemctl start killer_daemon.service
   ./scummvm
-  sudo killall python3
+  sudo systemctl stop killer_daemon.service
   sudo systemctl restart ogage &
 else
   if  [[ ${3,,} == *"menu.scummvm"* ]]

@@ -45,7 +45,7 @@ sudo chown ark:ark Arkbuild/home/ark/.asoundrc*
 
 # Sleep script
 sudo mkdir -p Arkbuild/usr/lib/systemd/system-sleep
-sudo cp scripts/sleep Arkbuild/usr/lib/systemd/system-sleep/
+sudo cp scripts/sleep.${CHIPSET} Arkbuild/usr/lib/systemd/system-sleep/sleep
 sudo chmod 777 Arkbuild/usr/lib/systemd/system-sleep/sleep
 
 # Set performance governor to ondemand on boot
@@ -67,6 +67,11 @@ sudo cp scripts/firstboot.sh ${mountpoint}/firstboot.sh
 #sudo cp scripts/fstab.exfat.${CHIPSET} ${mountpoint}/fstab.exfat
 sudo cp scripts/firstboot.service Arkbuild/etc/systemd/system/firstboot.service
 sudo chroot Arkbuild/ bash -c "systemctl enable firstboot"
+
+# Add hotkeydaemon service and python script
+sudo cp hotkeydaemon/killer_daemon.service Arkbuild/etc/systemd/system/killer_daemon.service
+sudo cp hotkeydaemon/killer_daemon.py Arkbuild/usr/local/bin/killer_daemon.py
+sudo chmod 777 Arkbuild/usr/local/bin/killer_daemon.py
 
 #Generate fstab to be used after EASYROMS expansion
 cat <<EOF | sudo tee ${mountpoint}/fstab.exfat

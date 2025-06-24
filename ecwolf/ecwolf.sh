@@ -50,7 +50,11 @@ then
     fi
   done < "${2}"
   cd "/$directory/wolf/$gamedir"
+  echo "VAR=ecwolf" > /home/ark/.config/KILLIT
+  sudo systemctl start killer_daemon.service
   SDL_GAMECONTROLLERCONFIG="$sdl_controllerconfig" /opt/ecwolf/ecwolf --savedir "/$directory/wolf/${gamedir}" ${params}
+  sudo systemctl stop killer_daemon.service
+  sudo systemctl restart ogage &
 elif [[ $2 == "/$directory/wolf/Scan_for_new_games.wolf" ]]
 then
   printf "\033c" >> /dev/tty1
@@ -65,9 +69,10 @@ elif [[ $1 == "standalone" ]]
 then
   filename="$(basename "$2")"
   cd "/$directory/wolf/${filename%.*}"
-  sudo /usr/local/bin/ecwolfsakeydemon.py &
+  echo "VAR=ecwolf" > /home/ark/.config/KILLIT
+  sudo systemctl start killer_daemon.service
   SDL_GAMECONTROLLERCONFIG="$sdl_controllerconfig" /opt/ecwolf/ecwolf --savedir "/$directory/wolf/${filename%.*}"
-  sudo killall python3
+  sudo systemctl stop killer_daemon.service
   sudo systemctl restart ogage &
 else
   filename="$(basename "$2")"
