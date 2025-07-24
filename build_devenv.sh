@@ -71,9 +71,6 @@ function verify_action() {
   fi
 }
 
-# Let's make sure necessary tools are available
-source ./prepare.sh
-
 # Step-by-step build process
 if [ "$1" == "32" ]; then
   BIT="32"
@@ -84,12 +81,14 @@ else
   ARCH="aarch64-linux-gnu"
   CHROOT_DIR="Ark_devenv"
 fi
-if [[ -f "${CHROOT_DIR}" ]]; then
+if [ -d "${CHROOT_DIR}" ]; then
   echo -e "${CHROOT_DIR} environment already exists.  Please delete it and rerun this make to create this new devenv\n\n"
   sleep 3
   exit 0
 fi
 mkdir -p ${CHROOT_DIR}/
+# Let's make sure necessary tools are available
+source ./prepare.sh
 echo -e "Boostraping Debian....\n\n"
 # Bootstrap base system
 if [ "$1" == "32" ]; then
