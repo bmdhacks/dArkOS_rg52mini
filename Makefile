@@ -1,13 +1,13 @@
 SHELL := /bin/bash
 
-DEBIAN_CODE_NAME ?= bookworm
+DEBIAN_CODE_NAME ?= trixie
 ENABLE_CACHE ?= y
 
 export DEBIAN_CODE_NAME
 export ENABLE_CACHE
 
 ifeq ($(DEBIAN_CODE_NAME),)
-  $(error DEBIAN_CODE_NAME is not set. Please run with DEBIAN_CODE_NAME=suite (e.g., bookworm))
+  $(error DEBIAN_CODE_NAME is not set. Please run with DEBIAN_CODE_NAME=suite (e.g., trixie))
 endif
 
 

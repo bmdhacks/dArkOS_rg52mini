@@ -8,7 +8,7 @@ call_chroot "cd /home/ark &&
   sed -i '/types.h\"/s//types.h\"\n\#include <limits>/' src/scripting/types.cpp &&
   mkdir build &&
   cd build &&
-  cmake ../. &&
+  cmake -DNO_GTK=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_RULE_MESSAGES=OFF ../. &&
   eatmydata make -j$(nproc) &&
   strip lzdoom
   "

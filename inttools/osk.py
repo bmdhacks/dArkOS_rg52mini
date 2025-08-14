@@ -185,26 +185,26 @@ class WrappableColumns(Columns):
     Adds the ability to wrap-around the children (left-right) when navigating
     """
     def keypress(self, size, key):
-        if self.__super.keypress(size, key):
-            if key not in ('left', 'right'):
-                return key
+        if key not in ('left', 'right'):
+            return super().keypress(size, key)
 
-            # we have a key, so it wasn't handled by any parent container
-            # handle 'left'/'right' ourselves for cursor wrapping
-            if key in ('left'):
-                # iterate from last widget to first
-                widgets = list(range(len(self.contents) - 1, -1, -1))
-            else:
-                # iterate from first widget to last
-                widgets = list(range(0, len(self.contents)))
+        count = len(self.contents)
+        pos = self.focus_position
 
-            # Find the 1st selectable widget and focus it
-            for i in widgets:
-                if not self.contents[i][0].selectable():
-                    continue
+        if key == 'left':
+            # Move left and wrap around instantly
+            pos = (pos - 1) % count
+        elif key == 'right':
+            # Move right and wrap around instantly
+            pos = (pos + 1) % count
 
-                self.focus_position = i
+        # Find the next selectable widget (skip static Text)
+        for _ in range(count):
+            widget = self.contents[pos][0]
+            if widget.selectable():
+                self.focus_position = pos
                 break
+            pos = (pos + (1 if key == 'right' else -1)) % count
 
 
 class ViewExit(Exception):
@@ -603,13 +603,22 @@ class OSK:
     def main(self):
         """
         Runs the event/display loop for our view
-        When the OK/Cancel buttons are used, 'ViewExit' will be raised,
-        otherwise assume the user has used 'Esc' to close the dialog
         """
-
         tty_in = open('/dev/tty1', 'r')
         screen = urwid.raw_display.Screen(input=tty_in)
-        self.loop = urwid.MainLoop(self.frame, PALETTE, screen=screen, unhandled_input=self.unhandled_key)
+        screen.set_mouse_tracking(False)               # Disable unused mouse events
+        screen.set_terminal_properties(colors=256)     # Faster terminal rendering
+
+        self.loop = urwid.MainLoop(
+            self.frame,
+            PALETTE,
+            screen=screen,
+            unhandled_input=self.unhandled_key
+        )
+        # Make navigation feel instant
+        self.loop.screen.set_input_timeouts(max_wait=0.005)  # 5ms check
+        self.loop.screen.set_mouse_tracking(False)
+
         try:
             self.loop.run()
             return self.on_exit(1)

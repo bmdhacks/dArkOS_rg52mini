@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Build and install linapple standalone emulator along with sdl2-compat
-call_chroot "cd /home/ark &&
+call_chroot "export CCACHE_DISABLE=1 &&
+  cd /home/ark &&
   cd ${CHIPSET}_core_builds &&
   chmod 777 builds-alt.sh &&
   eatmydata ./builds-alt.sh linapplesa &&
