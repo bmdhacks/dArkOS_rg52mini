@@ -1,11 +1,21 @@
 #!/bin/bash
 
 # Build and install Retroarch
-call_chroot "cd /home/ark &&
-  cd ${CHIPSET}_core_builds &&
-  chmod 777 builds-alt.sh &&
-  eatmydata ./builds-alt.sh retroarch
-  "
+while true
+do
+  call_chroot "cd /home/ark &&
+    cd ${CHIPSET}_core_builds &&
+    chmod 777 builds-alt.sh &&
+    [ -d retroarch ] && rm -rf retroarch* || echo \"Cloning into retroarch\" &&
+    eatmydata ./builds-alt.sh retroarch
+    "
+  if [[ "$?" -ne "0" ]]; then
+    sleep 30
+    continue
+  else
+    break
+  fi
+done
 
 sudo mkdir -p Arkbuild/opt/retroarch/bin
 sudo mkdir -p Arkbuild/home/ark/.config/retroarch/filters/video
@@ -83,12 +93,22 @@ sudo find Arkbuild/home/ark/.config/retroarch/assets/ -maxdepth 1 ! -name assets
 
 setup_arkbuild32
 sudo chroot Arkbuild32/ mkdir -p /home/ark
-call_chroot32 "cd /home/ark &&
-  if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CHIPSET}_core_builds.git; fi &&
-  cd ${CHIPSET}_core_builds &&
-  chmod 777 builds-alt.sh &&
-  ./builds-alt.sh retroarch
-  "
+while true
+do
+  call_chroot32 "cd /home/ark &&
+    if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CHIPSET}_core_builds.git; fi &&
+    cd ${CHIPSET}_core_builds &&
+    chmod 777 builds-alt.sh &&
+    [ -d retroarch ] && rm -rf retroarch* || echo \"Cloning into retroarch\" &&
+    ./builds-alt.sh retroarch
+    "
+  if [[ "$?" -ne "0" ]]; then
+    sleep 30
+    continue
+  else
+    break
+  fi
+done
 sudo mkdir -p Arkbuild/home/ark/.config/retroarch32/filters/video
 sudo mkdir -p Arkbuild/home/ark/.config/retroarch32/filters/audio
 sudo mkdir -p Arkbuild/home/ark/.config/retroarch32/autoconfig/udev

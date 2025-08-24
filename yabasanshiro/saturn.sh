@@ -52,11 +52,11 @@ elif [[ $1 == "retrorun" ]]; then
     sleep 1
     sudo ln -s /dev/input/event4 /dev/input/by-path/platform-odroidgo2-joypad-event-joystick
     sudo chmod 777 /dev/input/by-path/platform-odroidgo2-joypad-event-joystick
-    /usr/bin/retrorun -n -s /$directory/saturn -d /$directory/bios /home/ark/.config/retroarch/cores/"$2"_libretro.so "$3"
+    /usr/local/bin/retrorun -n -s /$directory/saturn -d /$directory/bios /home/ark/.config/retroarch/cores/"$2"_libretro.so "$3"
     sudo kill $(pidof rg351p-js2xbox)
     sudo rm /dev/input/by-path/platform-odroidgo2-joypad-event-joystick
   else
-    /usr/bin/retrorun -n -s /$directory/saturn -d /$directory/bios /home/ark/.config/retroarch/cores/"$2"_libretro.so "$3"
+    /usr/local/bin/retrorun -n -s /$directory/saturn -d /$directory/bios /home/ark/.config/retroarch/cores/"$2"_libretro.so "$3"
   fi
 else
   directory=$(dirname "$3" | cut -d "/" -f2)
@@ -74,10 +74,10 @@ else
     sleep 1
     sudo ln -s /dev/input/event4 /dev/input/by-path/platform-odroidgo2-joypad-event-joystick
     sudo chmod 777 /dev/input/by-path/platform-odroidgo2-joypad-event-joystick
-    /usr/bin/retrorun32 -n -s /$directory/saturn -d /$directory/bios /home/ark/.config/retroarch32/cores/"$2"_libretro.so "$3"
+    /usr/local/bin/retrorun32 -n -s /$directory/saturn -d /$directory/bios /home/ark/.config/retroarch32/cores/"$2"_libretro.so "$3"
     sudo kill $(pidof rg351p-js2xbox)
     sudo rm /dev/input/by-path/platform-odroidgo2-joypad-event-joystick
   else
-    /usr/bin/retrorun32 -n -s /$directory/saturn -d /$directory/bios /home/ark/.config/retroarch32/cores/"$2"_libretro.so "$3"
+    /usr/local/bin/retrorun32 -n -s /$directory/saturn -d /$directory/bios /home/ark/.config/retroarch32/cores/"$2"_libretro.so "$3"
   fi
 fi
