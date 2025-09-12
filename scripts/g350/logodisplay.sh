@@ -1,10 +1,8 @@
 #!/bin/bash
 
 if [ -f "/boot/logo.bmp" ]; then
-  sudo ffplay -x 1280 -y 720 /boot/logo.bmp &
-  #PROC=$!
+  export SDL_VIDEO_EGL_DRIVER="libEGL.so"
+  image-viewer /boot/logo.bmp &
   sleep 5s
-  sudo pkill ffplay
-  #sudo kill -9 $PROC
+  sudo pkill image-viewer
 fi
-
