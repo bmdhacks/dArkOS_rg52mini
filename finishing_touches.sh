@@ -208,6 +208,11 @@ elif [[ "$UNIT" == "rg351mp" ]] || [[ "$UNIT" == "g350" ]]; then
   sudo cp device/rg351mp/*.service Arkbuild/etc/systemd/system/
   sudo chroot Arkbuild/ bash -c "systemctl enable 351mp batt_led"
 fi
+if [[ "$UNIT" == "g350" ]]; then
+  sudo cp scripts/g350/*.sh Arkbuild/usr/local/bin/
+  sudo cp scripts/g350/logo.service Arkbuild/etc/systemd/system/logo.service
+  sudo chroot Arkbuild/ bash -c "systemctl enable logo"
+fi
 
 # Make all scripts in /usr/local/bin executable, world style
 sudo chmod 777 Arkbuild/usr/local/bin/*
