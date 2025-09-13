@@ -1,0 +1,14 @@
+[Unit]
+Description=Battery Life Indicator service
+
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=2
+
+ExecStart=/usr/local/bin/batt_life_warning.py
+
+[Install]
+WantedBy=multi-user.target

@@ -152,6 +152,16 @@ echo -e "Generating 20-usb-alsa.rules udev for usb dac support"
 echo -e "KERNEL==\"controlC[0-9]*\", DRIVERS==\"usb\", SYMLINK=\"snd/controlC7\"" | sudo tee Arkbuild/etc/udev/rules.d/20-usb-alsa.rules
 sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/checknswitchforusbdac.sh &\") | crontab -"
 
+# For RGB30 Units Only.  Check for v1 or v2 units and change dtbs due to performance issues.
+# Also provide some battery life status indication
+if [[ "$UNIT" == "rgb30" ]]; then
+  sudo cp scripts/rgb30/*.py Arkbuild/usr/local/bin/
+  sudo cp scripts/rgb30/*.service Arkbuild/etc/systemd/system/
+  sudo cp scripts/rgb30/*.sh Arkbuild/usr/local/bin/
+  sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/rgb30versioncheck.sh &\") | crontab -"
+  sudo chroot Arkbuild/ bash -c "systemctl enable batt_led"
+fi
+
 # Copy various other backend tools
 sudo cp -R scripts/.asoundbackup/ Arkbuild/usr/local/bin/
 sudo cp -R scripts/freej2me_files/ Arkbuild/usr/local/bin/
