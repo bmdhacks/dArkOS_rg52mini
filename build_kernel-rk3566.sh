@@ -12,6 +12,13 @@ if [ ! -d "$KERNEL_SRC" ]; then
   fi
 fi
 cd $KERNEL_SRC
+if [ "$UNIT" == "rgb30" ]; then
+  apt list --installed 2>/dev/null | grep -q "netpbm"
+  if [[ $? != "0" ]]; then
+    sudo apt -y install netpbm
+  fi
+  pngtopnm logos/unrotated/dArkosrgb30.png | ppmquant 224 | pnmnoraw > drivers/video/logo/logo_linux_clut224.ppm
+fi
 if [ "$UNIT" != "503" ] && [[ "$UNIT" != *"353"* ]]; then
   make ARCH=arm64 rk3566_optimized_with_wifi_linux_defconfig
   CFLAGS=-Wno-deprecated-declarations make -j$(nproc) ARCH=arm64 KERNEL_DTS=rk3566 KERNEL_CONFIG=rk3566_optimized_with_wifi_linux_defconfig
@@ -77,9 +84,21 @@ sudo rm -f ${mountpoint}/initrd.img
 
 # Build uboot and resource and install it to the image
 cd $KERNEL_SRC
-cp arch/arm64/boot/dts/rockchip/${UNIT_DTB}.dtb .
-# Next line generates the resource.img file needed to flash to the image and to build the uboot
-scripts/mkimg --dtb ${UNIT_DTB}.dtb
+if [ "$UNIT" == "503" ] || [[ "$UNIT" == *"353"* ]]; then
+  cp arch/arm64/boot/dts/rockchip/${UNIT_DTB}.dtb .
+  # Next line generates the resource.img file needed to flash to the image and to build the uboot
+  scripts/mkimg --dtb ${UNIT_DTB}.dtb
+else
+  # For some reason, supported PowKiddy rk3566 devices need resource.img generated from the RG503 Kernel source
+  git clone --recursive --depth=1 https://github.com/christianhaitian/rg503Kernel.git
+  cd rg503Kernel
+  make ARCH=arm64 rk3566_optimized_linux_defconfig
+  CFLAGS=-Wno-deprecated-declarations make -j$(nproc) ARCH=arm64 KERNEL_DTS=rk3566 KERNEL_CONFIG=rk3566_optimized_linux_defconfig
+  cp arch/arm64/boot/dts/rockchip/rk3566.dtb .
+  scripts/mkimg --dtb rk3566.dtb
+  cp resource.img ../.
+  cd ..
+fi
 git clone --depth=1 https://github.com/christianhaitian/rk356x-uboot.git
 git clone https://github.com/christianhaitian/rkbin.git
 mkdir -p ./prebuilts/gcc/linux-x86/aarch64/
