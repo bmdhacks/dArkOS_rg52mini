@@ -9,7 +9,7 @@ if [ "$ROOT_FILESYSTEM_FORMAT" == "xfs" ] || [ "$ROOT_FILESYSTEM_FORMAT" == "btr
     ROOT_FILESYSTEM_MOUNT_OPTIONS="defaults,noatime"
   else
     ROOT_FILESYSTEM_FORMAT_PARAMETERS="-O ^free-space-tree -f -L ROOTFS"
-    ROOT_FILESYSTEM_MOUNT_OPTIONS="defaults,noatime,compress=zlib:1"
+    ROOT_FILESYSTEM_MOUNT_OPTIONS="defaults,noatime,compress=zlib:1,ssd_spread"
   fi
 elif [[ "$ROOT_FILESYSTEM_FORMAT" == *"ext"* ]]; then
   ROOT_FILESYSTEM_FORMAT_PARAMETERS="-F -L ROOTFS"
