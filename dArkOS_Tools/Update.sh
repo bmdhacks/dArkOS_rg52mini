@@ -25,23 +25,6 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-if [[ -e "/dev/input/by-path/platform-ff300000.usb-usb-0:1.2:1.0-event-joystick" ]]; then
-  if [[ -e "/boot/rk3326-rg351v-linux.dtb" ]]; then
-    sudo rg351p-js2xbox --silent -t oga_joypad &
-    sleep 0.5
-    sudo ln -s /dev/input/event4 /dev/input/by-path/platform-odroidgo2-joypad-event-joystick
-    sleep 0.5
-    sudo chmod 777 /dev/input/by-path/platform-odroidgo2-joypad-event-joystick
-    export LD_LIBRARY_PATH=/usr/local/bin
-  else
-    sudo rg351p-js2xbox --silent -t oga_joypad &
-    sleep 0.5
-    sudo ln -s /dev/input/event3 /dev/input/by-path/platform-odroidgo2-joypad-event-joystick
-    sleep 0.5
-    sudo chmod 777 /dev/input/by-path/platform-odroidgo2-joypad-event-joystick
-  fi
-fi
-
 wget -t 3 -T 60 --no-check-certificate "$LOCATION"/updates/dArkOSUpdate.sh -O /home/ark/dArkOSUpdate.sh -a "$LOG_FILE" || sudo rm -f /home/ark/dArkOSUpdate.sh | tee -a "$LOG_FILE"
 if [ $? -ne 0 ]; then
   sudo msgbox "Looks like OTA updating is currently down or your wifi or internet connection is not functioning correctly."
