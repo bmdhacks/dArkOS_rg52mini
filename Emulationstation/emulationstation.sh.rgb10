@@ -2,25 +2,37 @@
 
 export SDL_ASSERT="always_ignore"
 
+. /usr/local/bin/buttonmon.sh
 
-event_num="2"
-event_type="EV_KEY"
-event_btn="BTN_SOUTH"
-if [[ -e "/dev/input/by-path/platform-ff300000.usb-usb-0:1.2:1.0-event-joystick" ]]; then
-  param_device="anbernic"
-  event_num="3"
-  event_btn="BTN_EAST"
-elif [[ -e "/dev/input/by-path/platform-odroidgo2-joypad-event-joystick" ]]; then
-    if [[ ! -z $(cat /etc/emulationstation/es_input.cfg | grep "190000004b4800000010000001010000") ]]; then
-      param_device="oga"
-        else
-          param_device="rk2020"
-        fi
-elif [[ -e "/dev/input/by-path/platform-odroidgo3-joypad-event-joystick" ]]; then
-  param_device="ogs"
-else
-  param_device="chi"
-fi
+boot_controls() {
+  export DIALOGRC=/opt/inttools/noshadows.dialogrc
+  printf "\033c" > /dev/tty1
+  if [[ ! -e "/dev/input/by-path/platform-odroidgo2-joypad-event-joystick" ]]; then
+    if test ! -z "$(cat /home/ark/.config/.DEVICE | grep RGB20PRO | tr -d '\0')"
+    then
+      sudo setfont /usr/share/consolefonts/Lat7-TerminusBold32x16.psf.gz
+    else
+      sudo setfont /usr/share/consolefonts/Lat7-TerminusBold28x14.psf.gz
+    fi
+  else
+    sudo setfont /usr/share/consolefonts/Lat7-Terminus16.psf.gz
+  fi
+
+  if [[ -z $(pgrep -f gptokeyb) ]] && [[ -z $(pgrep -f oga_controls) ]]; then
+    sudo chmod 666 /dev/uinput
+    export SDL_GAMECONTROLLERCONFIG_FILE="/opt/inttools/gamecontrollerdb.txt"
+    /opt/inttools/gptokeyb -c "/opt/inttools/keys.gptk" > /dev/null &
+    disown
+    set_gptokeyb="Y"
+  fi
+}
+
+kill_boot_controls() {
+  if [[ ! -z "$set_gptokeyb" ]]; then
+    pgrep -f gptokeyb | sudo xargs kill -9
+    unset SDL_GAMECONTROLLERCONFIG_FILE
+  fi
+}
 
 sudo chmod 666 /dev/tty1
 export TERM=linux
@@ -29,13 +41,22 @@ export XDG_RUNTIME_DIR=/run/user/$UID/
 
 isitrgui=$(cat ~/.config/retroarch/retroarch.cfg | grep 'menu_driver = "rgui"')
 
-evtest --query /dev/input/event$event_num $event_type $event_btn
+Test_Button_B
 if [ "$?" -eq "10" ]; then
-  #sudo systemctl start plymouth-quit
-  sudo /bin/plymouth hide-splash
   printf "\033c" > /dev/tty1
+  boot_controls
+  if [[ ! -e "/dev/input/by-path/platform-odroidgo2-joypad-event-joystick" ]]; then
+    if test ! -z "$(cat /home/ark/.config/.DEVICE | grep RGB20PRO | tr -d '\0')"
+    then
+      sudo setfont /usr/share/consolefonts/Lat7-TerminusBold32x16.psf.gz
+    else
+      sudo setfont /usr/share/consolefonts/Lat7-TerminusBold28x14.psf.gz
+    fi
+  else
+    sudo setfont /usr/share/consolefonts/Lat7-Terminus16.psf.gz
+  fi
   cd /usr/bin/emulationstation
-  sudo ./boot_controls none $param_device &
+
   while true; do
 
           selection=(dialog \
@@ -65,7 +86,7 @@ if [ "$?" -eq "10" ]; then
 
           for choice in $choices; do
                   case $choice in
-                          "1)") sudo kill -9 $(pidof boot_controls)
+                          "1)") kill_boot_controls
                                 printf "\033c" > /dev/tty1
                                 sudo systemctl restart ogage &
                                 /usr/bin/emulationstation/emulationstation.sh
@@ -78,7 +99,7 @@ if [ "$?" -eq "10" ]; then
                                     touch ~/.config/.setxmb
                                   fi
                                 fi
-                                sudo kill -9 $(pidof boot_controls)
+                                kill_boot_controls
                                 sudo cp -f /usr/bin/emulationstation/emulationstation.sh.ra /usr/bin/emulationstation/emulationstation.sh
                                 sed -i '/input_exit_emulator_btn/s//;input_exit_emulator_btn/g' /home/ark/.config/retroarch/retroarch.cfg
                                 printf "\033c" > /dev/tty1
@@ -86,39 +107,41 @@ if [ "$?" -eq "10" ]; then
                                 /usr/bin/emulationstation/emulationstation.sh
                                 exit
                                 ;;
-                          "3)") /opt/system/Wifi.sh
+                          "3)") kill_boot_controls
+                                /opt/system/Wifi.sh
+                                boot_controls
                                 ;;
                           "4)") /opt/system/Enable\ Remote\ Services.sh 2>&1 > /dev/tty1
                                 ;;
                           "5)") /opt/system/351Files.sh 2>&1 > /dev/tty1
                                 ;;
-                          "6)") sudo kill -9 $(pidof boot_controls)
+                          "6)") kill_boot_controls
                                 /opt/system/Advanced/"Backup ArkOS Settings.sh" 2>&1 > /dev/tty1
-                                sudo ./boot_controls none $param_device &
+                                boot_controls
                                 ;;
-                          "7)") sudo kill -9 $(pidof boot_controls)
+                          "7)") kill_boot_controls
                                 /opt/system/Advanced/"Restore ArkOS Settings.sh" 2>&1 > /dev/tty1
-                                sudo ./boot_controls none $param_device &
+                                boot_controls
                                 ;;
                           "8)") sudo cp /boot/rk3326-odroidgo2-linux-v11.dtb.oga11 /boot/rk3326-odroidgo2-linux-v11.dtb
-			        printf "The Trigger (L2 and R2) buttons have been activated for the OGA 1.1.\nArkos will now be restarted." >> /dev/tty1
-				sleep 5
-				sudo reboot
-			        ;;
+			                    printf "The Trigger (L2 and R2) buttons have been activated for the OGA 1.1.\nArkos will now be restarted." >> /dev/tty1
+				                sleep 5
+				                sudo reboot
+			                    ;;
                           "9)") sudo cp /boot/rk3326-odroidgo2-linux-v11.dtb.rgb10 /boot/rk3326-odroidgo2-linux-v11.dtb
-			        printf "The Trigger (L2 and R2) buttons and analog stick have been set for the RGB10.\nArkos will now be restarted." >> /dev/tty1
-				sleep 5
-				sudo reboot
-			        ;;
+			                    printf "The Trigger (L2 and R2) buttons and analog stick have been set for the RGB10.\nArkos will now be restarted." >> /dev/tty1
+				                sleep 5
+				                sudo reboot
+			                    ;;
                           "10)") sudo cp /boot/rk3326-odroidgo2-linux-v11.dtb.rgb10s /boot/rk3326-odroidgo2-linux-v11.dtb
-			        printf "The analog stick has been set for the RGB10s.\nArkos will now be restarted." >> /dev/tty1
-				sleep 5
-				sudo reboot
-			        ;;
+			                     printf "The analog stick has been set for the RGB10s.\nArkos will now be restarted." >> /dev/tty1
+				                 sleep 5
+				                 sudo reboot
+			                     ;;
                           "11)") sudo reboot
-                                ;;
+                                 ;;
                           "12)") sudo shutdown now
-                                ;;
+                                 ;;
                   esac
           done
   done

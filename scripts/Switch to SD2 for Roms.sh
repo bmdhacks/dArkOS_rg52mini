@@ -61,7 +61,7 @@ then
   if [ ! -d "/roms2/videos/" ]; then
       sudo mkdir /roms2/videos
   fi
-  sudo mount /roms2/tools /opt/system/Tools
+  sudo mount -B /roms2/tools /opt/system/Tools
   sed -i '/<path>\/roms\//s//<path>\/roms2\//' /etc/emulationstation/es_systems.cfg
   if [ "$filesystem" = "ext4" ]; then
      sudo sed -i '$a\/'"$blklocationforsed"' \/roms2 '"$filesystem"' defaults,nofail,x-systemd.device-timeout=7 0 1' /etc/fstab
