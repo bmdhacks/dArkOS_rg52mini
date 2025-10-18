@@ -68,7 +68,6 @@ sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot dmesg | g
 # Copy necessary tools for expansion of ROOTFS and convert fat32 games partition to exfat on initial boot
 sudo cp scripts/expandtoexfat.sh.${CHIPSET} ${mountpoint}/expandtoexfat.sh
 sudo cp scripts/firstboot.sh ${mountpoint}/firstboot.sh
-#sudo cp scripts/fstab.exfat.${CHIPSET} ${mountpoint}/fstab.exfat
 sudo cp scripts/firstboot.service Arkbuild/etc/systemd/system/firstboot.service
 sudo chroot Arkbuild/ bash -c "systemctl enable firstboot"
 
@@ -186,10 +185,10 @@ sudo cp scripts/spktoggle.sh Arkbuild/usr/local/bin/
 sudo chmod 777 Arkbuild/usr/local/bin/spktoggle.sh
 if [[ "$UNIT" != "rgb20pro" ]]; then
   sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/spktoggle.sh &\") | crontab -"
+else
+  sudo sed -i "/\#\!\/bin\/bash/c\\#\!\/bin\/bash\namixer -q sset \'Playback Path\' HP" ${mountpoint}/firstboot.sh
 fi
-#sudo cp scripts/audiopath.service Arkbuild/etc/systemd/system/audiopath.service
 sudo cp scripts/audiostate.service Arkbuild/etc/systemd/system/audiostate.service
-#sudo chroot Arkbuild/ bash -c "systemctl enable audiopath"
 sudo chroot Arkbuild/ bash -c "systemctl enable audiostate"
 
 # Copy various other backend tools
@@ -354,14 +353,6 @@ fi
 
 sync
 sudo umount -l ${mountpoint}
-#while true; do
-  #sleep 1
-  #if [[ -z "$(fuser -c ${mountpoint})" ]]; then
-    #break
-  #fi
-  #echo "${mountpoint} is still in use.  Attempting to force close processes using it..."
-  #sudo fuser -ckv -9 ${mountpoint}
-#done
 
 fat32_mountpoint=mnt/roms
 mkdir -p ${fat32_mountpoint}
