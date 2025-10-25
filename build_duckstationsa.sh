@@ -1,18 +1,26 @@
 #!/bin/bash
 
 # Build and install Duckstation standalone emulator
-call_chroot "cd /home/ark &&
-  cd ${CHIPSET}_core_builds &&
-  chmod 777 builds-alt.sh &&
-  eatmydata ./builds-alt.sh duckstationsa
-  "
-sudo mkdir -p Arkbuild/opt/duckstation
-sudo mkdir -p Arkbuild/home/ark/.config/duckstation
-sudo cp -Ra Arkbuild/home/ark/${CHIPSET}_core_builds/duckstationsa-64/duckstation-nogui Arkbuild/opt/duckstation/
-sudo cp -Ra Arkbuild/home/ark/${CHIPSET}_core_builds/duckstation/data/database Arkbuild/home/ark/.config/duckstation/
-sudo cp -Ra Arkbuild/home/ark/${CHIPSET}_core_builds/duckstation/data/inputprofiles Arkbuild/home/ark/.config/duckstation/
-sudo cp -Ra Arkbuild/home/ark/${CHIPSET}_core_builds/duckstation/data/resources Arkbuild/home/ark/.config/duckstation/
-sudo cp -Ra Arkbuild/home/ark/${CHIPSET}_core_builds/duckstation/data/shaders Arkbuild/home/ark/.config/duckstation/
+if [ -f "Arkbuild_package_cache/${CHIPSET}/duckstationsa.tar.gz" ]; then
+    sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/duckstationsa.tar.gz
+else
+	call_chroot "cd /home/ark &&
+	  cd ${CHIPSET}_core_builds &&
+	  chmod 777 builds-alt.sh &&
+	  eatmydata ./builds-alt.sh duckstationsa
+	  "
+	sudo mkdir -p Arkbuild/opt/duckstation
+	sudo mkdir -p Arkbuild/home/ark/.config/duckstation
+	sudo cp -Ra Arkbuild/home/ark/${CHIPSET}_core_builds/duckstationsa-64/duckstation-nogui Arkbuild/opt/duckstation/
+	sudo cp -Ra Arkbuild/home/ark/${CHIPSET}_core_builds/duckstation/data/database Arkbuild/home/ark/.config/duckstation/
+	sudo cp -Ra Arkbuild/home/ark/${CHIPSET}_core_builds/duckstation/data/inputprofiles Arkbuild/home/ark/.config/duckstation/
+	sudo cp -Ra Arkbuild/home/ark/${CHIPSET}_core_builds/duckstation/data/resources Arkbuild/home/ark/.config/duckstation/
+	sudo cp -Ra Arkbuild/home/ark/${CHIPSET}_core_builds/duckstation/data/shaders Arkbuild/home/ark/.config/duckstation/
+	if [ -f "Arkbuild_package_cache/${CHIPSET}/duckstationsa.tar.gz" ]; then
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/duckstationsa.tar.gz
+	fi
+	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/duckstationsa.tar.gz Arkbuild/opt/duckstation/ Arkbuild/home/ark/.config/duckstation/
+fi
 sudo cp duckstation/scripts/standalone-duckstation Arkbuild/usr/local/bin/
 sudo cp duckstation/configs/settings.ini.${UNIT} Arkbuild/home/ark/.config/duckstation/settings.ini
 call_chroot "chown -R ark:ark /opt/"

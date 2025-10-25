@@ -10,24 +10,36 @@ echo "export devpass=$(printenv DEV_PASS)" | sudo tee -a Arkbuild/home/ark/ES_VA
 echo "export apikey=$(printenv TGDB_APIKEY)" | sudo tee -a Arkbuild/home/ark/ES_VARIABLES.txt
 echo "export softname=\"dArkOS-${UNIT}\"" | sudo tee -a Arkbuild/home/ark/ES_VARIABLES.txt
 
-call_chroot "apt-get -y update && eatmydata apt-get -y install libfreeimage3 fonts-droid-fallback libfreetype6 curl vlc-bin libsdl2-mixer-2.0-0"
-call_chroot "cd /home/ark &&
-  source ES_VARIABLES.txt &&
-  rm ES_VARIABLES.txt &&
-  git clone --recursive --depth=1 https://github.com/christianhaitian/EmulationStation-fcamod -b 503noTTS &&
-  cd EmulationStation-fcamod &&
-  git submodule update --init &&
-  for f in \$(find . -type f \( -name '*.cpp' -o -name '*.h' \) -exec grep -L '<string>' {} \;); do
-    sed -i '1i#include <string>' \"\$f\";
-  done &&
-  sed -i '1i#include <ctime>' es-core/src/utils/TimeUtil.h &&
-  cmake -DSCREENSCRAPER_DEV_LOGIN=\"devid=\$devid&devpassword=\$devpass\" -DGAMESDB_APIKEY=\"\$apikey\" -DSCREENSCRAPER_SOFTNAME=\"\$softname\" . &&
-  make -j\$(nproc) &&
-  mkdir -pv /usr/bin/emulationstation &&
-  cp -a emulationstation /usr/bin/emulationstation &&
-  chmod 777 /usr/bin/emulationstation &&
-  cp -a resources /usr/bin/emulationstation/
-  "
+if [ -f "Arkbuild_package_cache/${CHIPSET}/emulationstation.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/emulationstation.commit)" == "$(curl -s https:/api.github.com/repos/christianhaitian/EmulationStation-fcamod/commits/503noTTS | jq -r '.sha')" ]; then
+    sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/emulationstation.tar.gz
+else
+	call_chroot "apt-get -y update && eatmydata apt-get -y install libfreeimage3 fonts-droid-fallback libfreetype6 curl vlc-bin libsdl2-mixer-2.0-0"
+	call_chroot "cd /home/ark &&
+	  source ES_VARIABLES.txt &&
+	  rm ES_VARIABLES.txt &&
+	  git clone --recursive --depth=1 https://github.com/christianhaitian/EmulationStation-fcamod -b 503noTTS &&
+	  cd EmulationStation-fcamod &&
+	  git submodule update --init &&
+	  for f in \$(find . -type f \( -name '*.cpp' -o -name '*.h' \) -exec grep -L '<string>' {} \;); do
+		sed -i '1i#include <string>' \"\$f\";
+	  done &&
+	  sed -i '1i#include <ctime>' es-core/src/utils/TimeUtil.h &&
+	  cmake -DSCREENSCRAPER_DEV_LOGIN=\"devid=\$devid&devpassword=\$devpass\" -DGAMESDB_APIKEY=\"\$apikey\" -DSCREENSCRAPER_SOFTNAME=\"\$softname\" . &&
+	  make -j\$(nproc) &&
+	  mkdir -pv /usr/bin/emulationstation &&
+	  cp -a emulationstation /usr/bin/emulationstation &&
+	  chmod 777 /usr/bin/emulationstation &&
+	  cp -a resources /usr/bin/emulationstation/
+	  "
+	if [ -f "Arkbuild_package_cache/${CHIPSET}/emulationstation.tar.gz" ]; then
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/emulationstation.tar.gz
+	fi
+	if [ -f "Arkbuild_package_cache/${CHIPSET}/emulationstation.commit" ]; then
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/emulationstation.commit
+	fi
+	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/emulationstation.tar.gz Arkbuild/usr/bin/emulationstation/ 
+	sudo git --git-dir=Arkbuild/home/ark/${CHIPSET}_core_builds/EmulationStation-fcamod/.git --work-tree=Arkbuild/home/ark/${CHIPSET}_core_builds/EmulationStation-fcamod rev-parse HEAD > Arkbuild_package_cache/${CHIPSET}/emulationstation.commit
+fi
 sudo rm -rf Arkbuild/home/ark/EmulationStation-fcamod
 sudo mkdir -p Arkbuild/etc/emulationstation/themes
 if [[ "${BUILD_ARMHF}" == "y" ]]; then

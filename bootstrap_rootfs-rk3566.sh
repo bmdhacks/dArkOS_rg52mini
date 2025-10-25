@@ -1,19 +1,33 @@
 #!/bin/bash
 
 echo -e "Boostraping Debian....\n\n"
-if [[ "${ENABLE_CACHE}" == "y" ]]; then
-  export DEBIAN_LOCATION="http://127.0.0.1:3142/deb.debian.org/debian/"
+if [ -f "Arkbuild_package_cache/debian_${DEBIAN_CODE_NAME}_rootfs.tar.gz" ] && [ "$(cat Arkbuild_package_cache/debian_${DEBIAN_CODE_NAME}_rootfs.commit)" == "$(curl -s https://deb.debian.org/debian/dists/stable/Release | grep "^Version:" | cut -d' ' -f2)" ]; then
+    sudo tar -xvzpf Arkbuild_package_cache/debian_${DEBIAN_CODE_NAME}_rootfs.tar.gz
 else
-  export DEBIAN_LOCATION="http://deb.debian.org/debian/"
+	if [[ "${ENABLE_CACHE}" == "y" ]]; then
+	  export DEBIAN_LOCATION="http://127.0.0.1:3142/deb.debian.org/debian/"
+	else
+	  export DEBIAN_LOCATION="http://deb.debian.org/debian/"
+	fi
+	# Bootstrap base system
+	sudo eatmydata debootstrap --no-check-gpg --include=eatmydata --resolve-deps --arch=arm64 --foreign ${DEBIAN_CODE_NAME} Arkbuild ${DEBIAN_LOCATION}
+	sudo cp /usr/bin/qemu-aarch64-static Arkbuild/usr/bin/
+	if [[ "${ENABLE_CACHE}" == "y" ]]; then
+	  echo 'Acquire::http::proxy "http://127.0.0.1:3142";' | sudo tee Arkbuild/etc/apt/apt.conf.d/99proxy
+	fi
+	sudo chroot Arkbuild/ apt-get -y install ccache eatmydata
+	sudo chroot Arkbuild/ eatmydata /debootstrap/debootstrap --second-stage
+
+	if [[ "${BUILD_ARMHF}" == "y" ]]; then
+	  # Enable armhf architecture and update
+	  sudo chroot Arkbuild/ dpkg --add-architecture armhf
+	  sudo chroot Arkbuild/ eatmydata apt-get -y update
+	  sudo chroot Arkbuild/ eatmydata apt-get -y install libc6:armhf liblzma5:armhf libasound2t64:armhf libfreetype6:armhf libxkbcommon-x11-0:armhf libudev1:armhf libudev0:armhf libgbm1:armhf libstdc++6:armhf
+	fi
+
+	sudo cat Arkbuild/etc/os-release | grep "^DEBIAN_VERSION_FULL=" | cut -d'=' -f2 > Arkbuild_package_cache/debian_${DEBIAN_CODE_NAME}_rootfs.commit
+	sudo tar -cvpzf Arkbuild_package_cache/debian_${DEBIAN_CODE_NAME}_rootfs.tar.gz Arkbuild/
 fi
-# Bootstrap base system
-sudo eatmydata debootstrap --no-check-gpg --include=eatmydata --resolve-deps --arch=arm64 --foreign ${DEBIAN_CODE_NAME} Arkbuild ${DEBIAN_LOCATION}
-sudo cp /usr/bin/qemu-aarch64-static Arkbuild/usr/bin/
-if [[ "${ENABLE_CACHE}" == "y" ]]; then
-  echo 'Acquire::http::proxy "http://127.0.0.1:3142";' | sudo tee Arkbuild/etc/apt/apt.conf.d/99proxy
-fi
-sudo chroot Arkbuild/ apt-get -y install ccache eatmydata
-sudo chroot Arkbuild/ eatmydata /debootstrap/debootstrap --second-stage
 
 # Bind essential host filesystems into chroot for networking
 sudo mount --bind /dev Arkbuild/dev
@@ -27,13 +41,6 @@ echo -e "nameserver 8.8.8.8\nnameserver 1.1.1.1" | sudo tee Arkbuild/etc/resolv.
 echo "exit 101" | sudo tee Arkbuild/usr/sbin/policy-rc.d > /dev/null
 sudo chmod 0755 Arkbuild/usr/sbin/policy-rc.d
 sudo chroot Arkbuild/ mount -t proc proc /proc
-
-if [[ "${BUILD_ARMHF}" == "y" ]]; then
-  # Enable armhf architecture and update
-  sudo chroot Arkbuild/ dpkg --add-architecture armhf
-  sudo chroot Arkbuild/ eatmydata apt-get -y update
-  sudo chroot Arkbuild/ eatmydata apt-get -y install libc6:armhf liblzma5:armhf libasound2t64:armhf libfreetype6:armhf libxkbcommon-x11-0:armhf libudev1:armhf libudev0:armhf libgbm1:armhf libstdc++6:armhf
-fi
 
 # Install base runtime packages
 sudo chroot Arkbuild/ eatmydata apt-get install -y btrfs-progs initramfs-tools sudo evtest network-manager systemd-sysv locales locales-all ssh dosfstools fluidsynth

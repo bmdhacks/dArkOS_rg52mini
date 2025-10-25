@@ -1,38 +1,50 @@
 #!/bin/bash
 
 # Build and install Retroarch
-while true
-do
-  call_chroot "cd /home/ark &&
-    cd ${CHIPSET}_core_builds &&
-    chmod 777 builds-alt.sh &&
-    [ -d retroarch ] && rm -rf retroarch* || echo \"Cloning into retroarch\" &&
-    eatmydata ./builds-alt.sh retroarch
-    "
-  if [[ "$?" -ne "0" ]]; then
-    sleep 30
-    continue
-  else
-    break
-  fi
-done
-
-sudo mkdir -p Arkbuild/opt/retroarch/bin
-sudo mkdir -p Arkbuild/home/ark/.config/retroarch/filters/video
-sudo mkdir -p Arkbuild/home/ark/.config/retroarch/filters/audio
-sudo mkdir -p Arkbuild/home/ark/.config/retroarch/autoconfig/udev
-sudo mkdir -p Arkbuild/opt/cmds
-if [ "$UNIT" == "rgb10" ] || [ "$UNIT" == "rk2020" ]; then
-  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch.${CHIPSET}.rot Arkbuild/opt/retroarch/bin/retroarch
-elif [ "$CHIPSET" == "rk3566" ]; then
-  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch Arkbuild/opt/retroarch/bin/retroarch
+if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/retroarch.sh | grep -oP '(?<=tag=").*?(?=")')" ]; then
+    sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.tar.gz
 else
-  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch.${CHIPSET}.unrot Arkbuild/opt/retroarch/bin/retroarch
+	while true
+	do
+	  call_chroot "cd /home/ark &&
+		cd ${CHIPSET}_core_builds &&
+		chmod 777 builds-alt.sh &&
+		[ -d retroarch ] && rm -rf retroarch* || echo \"Cloning into retroarch\" &&
+		eatmydata ./builds-alt.sh retroarch
+		"
+	  if [[ "$?" -ne "0" ]]; then
+		sleep 30
+		continue
+	  else
+		break
+	  fi
+	done
+
+	sudo mkdir -p Arkbuild/opt/retroarch/bin
+	sudo mkdir -p Arkbuild/home/ark/.config/retroarch/filters/video
+	sudo mkdir -p Arkbuild/home/ark/.config/retroarch/filters/audio
+	sudo mkdir -p Arkbuild/home/ark/.config/retroarch/autoconfig/udev
+	sudo mkdir -p Arkbuild/opt/cmds
+	if [ "$UNIT" == "rgb10" ] || [ "$UNIT" == "rk2020" ]; then
+	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch.${CHIPSET}.rot Arkbuild/opt/retroarch/bin/retroarch
+	elif [ "$CHIPSET" == "rk3566" ]; then
+	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch Arkbuild/opt/retroarch/bin/retroarch
+	else
+	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch.${CHIPSET}.unrot Arkbuild/opt/retroarch/bin/retroarch
+	fi
+	sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch/gfx/video_filters/*.so Arkbuild/home/ark/.config/retroarch/filters/video/
+	sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch/gfx/video_filters/*.filt Arkbuild/home/ark/.config/retroarch/filters/video/
+	sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch/libretro-common/audio/dsp_filters/*.so Arkbuild/home/ark/.config/retroarch/filters/audio/
+	sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch/libretro-common/audio/dsp_filters/*.dsp Arkbuild/home/ark/.config/retroarch/filters/audio/
+	if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.tar.gz" ]; then
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.tar.gz
+	fi
+	if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.commit" ]; then
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.commit
+	fi
+	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.tar.gz Arkbuild/opt/retroarch/bin/retroarch Arkbuild/home/ark/.config/retroarch/
+	sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/retroarch.sh | grep -oP '(?<=tag=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.commit
 fi
-sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch/gfx/video_filters/*.so Arkbuild/home/ark/.config/retroarch/filters/video/
-sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch/gfx/video_filters/*.filt Arkbuild/home/ark/.config/retroarch/filters/video/
-sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch/libretro-common/audio/dsp_filters/*.so Arkbuild/home/ark/.config/retroarch/filters/audio/
-sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch/libretro-common/audio/dsp_filters/*.dsp Arkbuild/home/ark/.config/retroarch/filters/audio/
 sudo rm -rf Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch/
 sudo cp retroarch/configs/retroarch.cfg.${UNIT} Arkbuild/home/ark/.config/retroarch/retroarch.cfg
 sudo cp retroarch/configs/retroarch.cfg.bak.${UNIT} Arkbuild/home/ark/.config/retroarch/retroarch.cfg.bak
@@ -91,38 +103,50 @@ sudo find Arkbuild/home/ark/.config/retroarch/assets/ -maxdepth 1 ! -name assets
                                                                   ! -name xmb \
                                                                   ! -name COPYING -type d,f -not -path '.' -exec rm -rf {} +
 if [[ "${BUILD_ARMHF}" == "y" ]]; then
-	setup_arkbuild32
-	sudo chroot Arkbuild32/ mkdir -p /home/ark
-	while true
-	do
-	  call_chroot32 "cd /home/ark &&
-		if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CHIPSET}_core_builds.git; fi &&
-		cd ${CHIPSET}_core_builds &&
-		chmod 777 builds-alt.sh &&
-		[ -d retroarch ] && rm -rf retroarch* || echo \"Cloning into retroarch\" &&
-		./builds-alt.sh retroarch
-		"
-	  if [[ "$?" -ne "0" ]]; then
-		sleep 30
-		continue
-	  else
-		break
-	  fi
-	done
-	sudo mkdir -p Arkbuild/home/ark/.config/retroarch32/filters/video
-	sudo mkdir -p Arkbuild/home/ark/.config/retroarch32/filters/audio
-	sudo mkdir -p Arkbuild/home/ark/.config/retroarch32/autoconfig/udev
-	if [ "$UNIT" == "rgb10" ] || [ "$UNIT" == "rk2020" ]; then
-	  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32.${CHIPSET}.rot Arkbuild/opt/retroarch/bin/retroarch32
-	elif [ "$CHIPSET" == "rk3566" ]; then
-	  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32 Arkbuild/opt/retroarch/bin/retroarch32
+	if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/retroarch.sh | grep -oP '(?<=tag=").*?(?=")')" ]; then
+      sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz
 	else
-	  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32.${CHIPSET}.unrot Arkbuild/opt/retroarch/bin/retroarch32
+		setup_arkbuild32
+		sudo chroot Arkbuild32/ mkdir -p /home/ark
+		while true
+		do
+		  call_chroot32 "cd /home/ark &&
+			if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CHIPSET}_core_builds.git; fi &&
+			cd ${CHIPSET}_core_builds &&
+			chmod 777 builds-alt.sh &&
+			[ -d retroarch ] && rm -rf retroarch* || echo \"Cloning into retroarch\" &&
+			./builds-alt.sh retroarch
+			"
+		  if [[ "$?" -ne "0" ]]; then
+			sleep 30
+			continue
+		  else
+			break
+		  fi
+		done
+		sudo mkdir -p Arkbuild/home/ark/.config/retroarch32/filters/video
+		sudo mkdir -p Arkbuild/home/ark/.config/retroarch32/filters/audio
+		sudo mkdir -p Arkbuild/home/ark/.config/retroarch32/autoconfig/udev
+		if [ "$UNIT" == "rgb10" ] || [ "$UNIT" == "rk2020" ]; then
+		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32.${CHIPSET}.rot Arkbuild/opt/retroarch/bin/retroarch32
+		elif [ "$CHIPSET" == "rk3566" ]; then
+		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32 Arkbuild/opt/retroarch/bin/retroarch32
+		else
+		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32.${CHIPSET}.unrot Arkbuild/opt/retroarch/bin/retroarch32
+		fi
+		sudo cp -a Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch/gfx/video_filters/*.so Arkbuild/home/ark/.config/retroarch32/filters/video/
+		sudo cp -a Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch/gfx/video_filters/*.filt Arkbuild/home/ark/.config/retroarch32/filters/video/
+		sudo cp -a Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch/libretro-common/audio/dsp_filters/*.so Arkbuild/home/ark/.config/retroarch32/filters/audio/
+		sudo cp -a Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch/libretro-common/audio/dsp_filters/*.dsp Arkbuild/home/ark/.config/retroarch32/filters/audio/
+		if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz" ]; then
+	      sudo rm -f Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz
+		fi
+		if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit" ]; then
+	      sudo rm -f Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit
+		fi
+		sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz Arkbuild/opt/retroarch/bin/retroarch32 Arkbuild/home/ark/.config/retroarch32/
+		sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/retroarch.sh | grep -oP '(?<=tag=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit
 	fi
-	sudo cp -a Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch/gfx/video_filters/*.so Arkbuild/home/ark/.config/retroarch32/filters/video/
-	sudo cp -a Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch/gfx/video_filters/*.filt Arkbuild/home/ark/.config/retroarch32/filters/video/
-	sudo cp -a Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch/libretro-common/audio/dsp_filters/*.so Arkbuild/home/ark/.config/retroarch32/filters/audio/
-	sudo cp -a Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch/libretro-common/audio/dsp_filters/*.dsp Arkbuild/home/ark/.config/retroarch32/filters/audio/
 	sudo cp retroarch32/configs/retroarch.cfg.${UNIT} Arkbuild/home/ark/.config/retroarch32/retroarch.cfg
 	sudo cp retroarch32/configs/retroarch.cfg.bak.${UNIT} Arkbuild/home/ark/.config/retroarch32/retroarch.cfg.bak
 	sudo cp retroarch32/configs/retroarch-core-options.cfg.${UNIT} Arkbuild/home/ark/.config/retroarch32/retroarch-core-options.cfg

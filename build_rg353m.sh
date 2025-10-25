@@ -49,6 +49,7 @@ source ./build_hypseus-singe.sh
 source ./build_openbor.sh
 source ./build_solarus.sh
 source ./build_scummvmsa.sh
+exit 0
 source ./build_fake08.sh
 source ./build_xroar.sh
 source ./build_mvem.sh

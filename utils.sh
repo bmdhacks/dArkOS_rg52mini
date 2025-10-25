@@ -15,6 +15,11 @@ if [ ! -d "/opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu" ];
   rm gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu.tar.xz
 fi
 
+# Verify package cache directory exists
+if [ ! -d "Arkbuild_package_cache/${CHIPSET}" ]; then
+  mkdir -p Arkbuild_package_cache/${CHIPSET}
+fi
+
 # Setup the necessary exports
 export ARCH=arm64
 export CROSS_COMPILE=aarch64-linux-gnu-
