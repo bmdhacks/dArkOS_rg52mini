@@ -21,8 +21,8 @@ fi
 NAME=`echo ${NAME} | tr '[:lower:]' '[:upper:]'`
 echo "export softname=\"dArkOS-${NAME}\"" | sudo tee -a Arkbuild/home/ark/ES_VARIABLES.txt
 
-if [ -f "Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES-BRANCH}.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES-BRANCH}.commit)" == "$(curl -s https:/api.github.com/repos/christianhaitian/EmulationStation-fcamod/commits/${ES-BRANCH} | jq -r '.sha')" ]; then
-    sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES-BRANCH}.tar.gz
+if [ -f "Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES_BRANCH}.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES_BRANCH}.commit)" == "$(curl -s https:/api.github.com/repos/christianhaitian/EmulationStation-fcamod/commits/${ES_BRANCH} | jq -r '.sha')" ]; then
+    sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES_BRANCH}.tar.gz
     sudo rm Arkbuild/home/ark/ES_VARIABLES.txt
 else
 	call_chroot "apt-get -y update && eatmydata apt-get -y install libfreeimage3 fonts-droid-fallback libfreetype6 curl vlc-bin libsdl2-mixer-2.0-0"
@@ -44,13 +44,13 @@ else
 	  cp -a resources /usr/bin/emulationstation/
 	  "
 	if [ -f "Arkbuild_package_cache/${CHIPSET}/emulationstation.tar.gz" ]; then
-	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES-BRANCH}.tar.gz
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES_BRANCH}.tar.gz
 	fi
 	if [ -f "Arkbuild_package_cache/${CHIPSET}/emulationstation.commit" ]; then
-	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES-BRANCH}.commit
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES_BRANCH}.commit
 	fi
-	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES-BRANCH}.tar.gz Arkbuild/usr/bin/emulationstation/
-	sudo git --git-dir=Arkbuild/home/ark/EmulationStation-fcamod/.git --work-tree=Arkbuild/home/ark/EmulationStation-fcamod rev-parse HEAD > Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES-BRANCH}.commit
+	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES_BRANCH}.tar.gz Arkbuild/usr/bin/emulationstation/
+	sudo git --git-dir=Arkbuild/home/ark/EmulationStation-fcamod/.git --work-tree=Arkbuild/home/ark/EmulationStation-fcamod rev-parse HEAD > Arkbuild_package_cache/${CHIPSET}/emulationstation_${ES_BRANCH}.commit
 fi
 sudo rm -rf Arkbuild/home/ark/EmulationStation-fcamod
 sudo mkdir -p Arkbuild/etc/emulationstation/themes
