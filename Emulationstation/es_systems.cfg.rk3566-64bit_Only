@@ -545,7 +545,7 @@
 		<fullname>Atari Jaguar</fullname>
 		<path>/roms/atarijaguar/</path>
 		<extension>.j64 .J64 .jag .JAG .rom .ROM .abs .ABS .cof .COF .bin .BIN .prg .PRG</extension>
-		<command>sudo perfmax %GOVERNOR% %ROM%; nice -n -19 /usr/local/bin/retroarch -L /home/ark/.config/retroarch/cores/virtualjaguar_libretro.so %ROM%; sudo perfnorm</command>
+		<command>sudo perfmax %GOVERNOR% %ROM%; nice -n -19 /usr/local/bin/bigpemu.sh %ROM%; sudo perfnorm</command>
 		<platform>atarijaguar</platform>
 		<theme>atarijaguar</theme>
 		<manufacturer>Atari</manufacturer>

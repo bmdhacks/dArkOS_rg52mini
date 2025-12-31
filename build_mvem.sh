@@ -16,10 +16,10 @@ else
 	  chmod 777 /opt/mvem/mvem
 	  "
 	sudo cp -R mvem/controls/ Arkbuild/opt/mvem/
-	if [ -f "Arkbuild_package_cache/${CHIPSET}/ogage.tar.gz" ]; then
+	if [ -f "Arkbuild_package_cache/${CHIPSET}/mvem.tar.gz" ]; then
 	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/mvem.tar.gz
 	fi
-	if [ -f "Arkbuild_package_cache/${CHIPSET}/ogage.commit" ]; then
+	if [ -f "Arkbuild_package_cache/${CHIPSET}/mvem.commit" ]; then
 	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/mvem.commit
 	fi
 	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/mvem.tar.gz Arkbuild/opt/mvem/

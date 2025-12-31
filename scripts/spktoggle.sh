@@ -37,8 +37,6 @@ else
   if [ -z "$spktoggle" ]
   then
       amixer -q sset 'Playback Path' SPK
-  else
-      amixer -q sset 'Playback Path' HP
   fi
   if [ -f "/var/local/asound.state" ]
   then

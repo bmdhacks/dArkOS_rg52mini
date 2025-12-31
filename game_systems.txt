@@ -11,6 +11,7 @@ atari800
 atari2600
 atari5200
 atari7800
+atarijaguar
 atarilynx
 atarixegs
 atomiswave
