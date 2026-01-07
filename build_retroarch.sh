@@ -111,6 +111,82 @@ sudo rm -rf Arkbuild/home/ark/.config/retroarch/shaders/shaders_glsl/Sharp-Shimm
 sudo mv Arkbuild/home/ark/.config/retroarch/shaders/shaders_glsl/Sharp-Shimmerless/shaders_glsl/* Arkbuild/home/ark/.config/retroarch/shaders/shaders_glsl/Sharp-Shimmerless/
 sudo rm -rf Arkbuild/home/ark/.config/retroarch/shaders/shaders_glsl/Sharp-Shimmerless/shaders_glsl/
 
+# Build libretro easyrpg from scratch since there is usually a need for a matching liblcf file for a new build
+if [ -f "Arkbuild_package_cache/${CHIPSET}/easyrpg.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/easyrpg.commit)" == "$(cat Arkbuild_package_cache/${CHIPSET}/easyrpg.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/easyrpg.sh | grep -oP '(?<=tag=").*?(?=")')" ]; then
+    sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/easyrpg.tar.gz
+else
+	while true
+	do
+	  call_chroot "cd /home/ark &&
+		cd ${CHIPSET}_core_builds &&
+		[ -d Player ] && rm -rf Player || echo \"Cloning into Player\" &&
+		eatmydata ./builds-alt.sh easyrpg
+		"
+	  if [[ "$?" -ne "0" ]]; then
+		sleep 30
+		continue
+	  else
+		break
+	  fi
+	done
+	sudo cp Arkbuild/home/ark/${CHIPSET}_core_builds/cores64/easyrpg_libretro.so Arkbuild/home/ark/.config/retroarch/cores/
+	sudo cp Arkbuild/home/ark/${CHIPSET}_core_builds/cores64/liblcf.so.0 Arkbuild/usr/lib/aarch64-linux-gnu/
+	if [ -f "Arkbuild_package_cache/${CHIPSET}/easyrpg.tar.gz" ]; then
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/easyrpg.tar.gz
+	fi
+	if [ -f "Arkbuild_package_cache/${CHIPSET}/easyrpg.commit" ]; then
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/easyrpg.commit
+	fi
+	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/easyrpg.tar.gz Arkbuild/home/ark/.config/retroarch/cores/easyrpg_libretro.so Arkbuild/usr/lib/aarch64-linux-gnu/liblcf.so.0
+	sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/easyrpg.sh | grep -oP '(?<=tag=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/easyrpg.commit
+fi
+
+# Build freej2me-lr.jar and freej2me-plus-lr.jar
+if [ -f "Arkbuild_package_cache/${CHIPSET}/freej2me-plus.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/freej2me-plus.commit)" == "$(cat Arkbuild_package_cache/${CHIPSET}/freej2me-plus.commit)" == "$(curl --silent https:/api.github.com/repos/TASEmulators/freej2me-plus/releases | grep '"tag_name":' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')" ]; then
+    sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/freej2me-plus.tar.gz
+else
+   call_chroot "cd /home/ark &&
+		cd ${CHIPSET}_core_builds &&
+		[ -d freej2me-plus ] && rm -rf freej2me-plus || echo \"Cloning into freej2me-plus\" &&
+		git clone --recursive https://github.com/TASEmulators/freej2me-plus.git &&
+		cd freej2me-plus &&
+		sed -i 's/freej2me-lr.jar/freej2me-plus-lr.jar/' build.xml &&
+		sed -i 's/1.6/1.8/' build.xml &&
+		ant
+		"
+   sudo mkdir -p Arkbuild/usr/local/bin/freej2me_files/
+   sudo cp Arkbuild/home/ark/${CHIPSET}_core_builds/freej2me-plus/build/freej2me-plus-lr.jar Arkbuild/usr/local/bin/freej2me_files/
+   if [ -f "Arkbuild_package_cache/${CHIPSET}/freej2me-plus.tar.gz" ]; then
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/freej2me-plus.tar.gz
+   fi
+   if [ -f "Arkbuild_package_cache/${CHIPSET}/freej2me-plus.commit" ]; then
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/freej2me-plus.commit
+   fi
+   sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/freej2me-plus.tar.gz Arkbuild/usr/local/bin/freej2me_files/freej2me-plus-lr.jar
+   sudo curl --silent https:/api.github.com/repos/TASEmulators/freej2me-plus/releases | grep '"tag_name":' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/' > Arkbuild_package_cache/${CHIPSET}/freej2me-plus.commit
+fi
+if [ -f "Arkbuild_package_cache/${CHIPSET}/freej2me.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/freej2me.commit)" == "$(cat Arkbuild_package_cache/${CHIPSET}/freej2me.commit)" == "$(curl -s https:/api.github.com/repos/hex007/freej2me/commits/master | jq -r '.sha')" ]; then
+    sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/freej2me.tar.gz
+else
+   call_chroot "cd /home/ark &&
+		cd ${CHIPSET}_core_builds &&
+		[ -d freej2me ] && rm -rf freej2me || echo \"Cloning into freej2me\" &&
+		git clone --recursive https://github.com/hex007/freej2me.git &&
+		cd freej2me &&
+		ant
+		"
+   sudo mkdir -p Arkbuild/usr/local/bin/freej2me_files/
+   sudo cp Arkbuild/home/ark/${CHIPSET}_core_builds/freej2me/build/freej2me-lr.jar Arkbuild/usr/local/bin/freej2me_files/
+   if [ -f "Arkbuild_package_cache/${CHIPSET}/freej2me.tar.gz" ]; then
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/freej2me.tar.gz
+   fi
+   if [ -f "Arkbuild_package_cache/${CHIPSET}/freej2me.commit" ]; then
+	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/freej2me.commit
+   fi
+   sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/freej2me.tar.gz Arkbuild/usr/local/bin/freej2me_files/freej2me-lr.jar
+   sudo curl -s https:/api.github.com/repos/hex007/freej2me/commits/master | jq -r '.sha' > Arkbuild_package_cache/${CHIPSET}/freej2me.commit
+fi
+
 if [[ "${BUILD_ARMHF}" == "y" ]]; then
 	if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/retroarch.sh | grep -oP '(?<=tag=").*?(?=")')" ]; then
       sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz

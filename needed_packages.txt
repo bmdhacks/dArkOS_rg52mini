@@ -34,6 +34,7 @@ libmpeg2-4
 libogg0
 libopenal1
 libphysfs1
+libpixman-1-0
 libpng16-16t64
 libsdl2-2.0-0
 libsdl2-dev
