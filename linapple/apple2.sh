@@ -31,13 +31,7 @@ if [[ $EMULATOR == "linapple" ]]; then
 
   # The next 2 variables are for use with custom game controls if the user creates some
   gamecontrols=$(echo "$(ls "$GAME" | cut -d "/" -f4 | cut -d "." -f1)")
-
-  # shell quote parens
-  gamecontrols=${gamecontrols//\(/\\(}; gamecontrols=${gamecontrols//\)/\\)} # quote ()
-  gamecontrols=${gamecontrols//\[/\\[}; gamecontrols=${gamecontrols//\]/\\]} # quote []
-
-  findcmd="find /$directory/apple2/controls/ -maxdepth 1 -iname "; findcmd+="${gamecontrols}.gptk"
-  custom_gamecontrols_nocase=$($findcmd)
+  custom_gamecontrols_nocase=$(find /$directory/apple2/controls -maxdepth 1 -iname "${gamecontrols}".gptk -print -quit 2>/dev/null)
 
   # The next 2 variables are for use with a custom linapple config if the user creates some
   linappleconfig=$(echo "$(ls "$GAME" | cut -d "/" -f4 | cut -d "." -f1)")
