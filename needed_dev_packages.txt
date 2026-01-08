@@ -15,6 +15,7 @@ libcurl4-openssl-dev
 libdrm-dev
 libeigen3-dev
 libevdev-dev
+libfmt-dev
 libfreeimage-dev
 libfreetype-dev
 libinih-dev
