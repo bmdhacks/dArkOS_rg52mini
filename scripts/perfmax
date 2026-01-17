@@ -26,6 +26,25 @@ if [ -e "/home/ark/.config/.GameLoadingIModeASCII" ] && [[ $(tty) != *"pts"* ]];
   else
     continue
   fi
+
+elif [ -e "/home/ark/.config/.GameLoadingIModeGIF" ] && [[ $(tty) != *"pts"* ]]; then
+  if [ -f "/roms/launchimages/loading.gif" ]; then
+    ffplay -x 1280 -y 720 -loglevel quiet -autoexit /roms/launchimages/loading.gif &
+    PROC=$!
+    (sleep 3s; kill -9 $PROC)
+  else
+    continue
+  fi
+
+elif [ -e "/home/ark/.config/.GameLoadingIModeVID" ] && [[ $(tty) != *"pts"* ]]; then
+  if [ -f "/roms/launchimages/loading.mp4" ]; then
+    ffplay -x 1280 -y 720 -loglevel quiet -autoexit /roms/launchimages/loading.mp4 &
+    PROC=$!
+    (sleep 4s; kill -9 $PROC)
+  else
+    continue
+  fi
+
 elif [ -e "/home/ark/.config/.GameLoadingIModePIC" ] && [[ $(tty) != *"pts"* ]]; then
   directory=$(echo "$(dirname "$2")"/images)
   basefile="$(basename -- "$2")"
@@ -48,10 +67,11 @@ elif [ -e "/home/ark/.config/.GameLoadingIModePIC" ] && [[ $(tty) != *"pts"* ]];
       image-viewer /roms/launchimages/loading.jpg &
       PROC=$!
       (sleep 2s; kill -9 $PROC)
-	else
-	  continue
-	fi
+    else
+      continue
+    fi
   fi
+
 else
   clear > /dev/tty1
 fi
