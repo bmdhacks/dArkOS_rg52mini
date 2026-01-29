@@ -187,6 +187,9 @@ then
   if [ ! -d "/roms2/bbcmicro/" ]; then
       sudo mkdir /roms2/bbcmicro
   fi
+  if [ ! -d "/roms2/gametank/" ]; then
+      sudo mkdir /roms2/gametank
+  fi
   sudo pkill filebrowser
   filebrowser -d /home/ark/.config/filebrowser.db users update ark --scope "/roms2"
   printf "\n\n\e[32m$filesystem sdcard in slot2 is mounted to /roms2...\n"
