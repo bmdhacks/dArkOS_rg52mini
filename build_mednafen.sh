@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build and install Mednafen
-if [ -f "Arkbuild_package_cache/${CHIPSET}/mednafen.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/mednafen.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/mednafen.sh | grep -oP '(?<=tarname=").*?(?=")')" ]; then
+if [ -f "Arkbuild_package_cache/${CHIPSET}/mednafen.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/mednafen.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/mednafen.sh | grep -oP '(?<=tarname=").*?(?=")')" ]; then
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/mednafen.tar.gz
 else
 	call_chroot "cd /home/ark &&
@@ -18,7 +18,7 @@ else
 	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/mednafen.commit
 	fi
 	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/mednafen.tar.gz Arkbuild/opt/mednafen/
-	sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/mednafen.sh | grep -oP '(?<=tarname=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/mednafen.commit
+	sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/mednafen.sh | grep -oP '(?<=tarname=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/mednafen.commit
 fi
 sudo mkdir -p Arkbuild/home/ark/.mednafen
 sudo cp mednafen/configs/mednafen.cfg.${UNIT} Arkbuild/home/ark/.mednafen/mednafen.cfg

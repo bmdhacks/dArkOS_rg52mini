@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build and install PPSSPP standalone emulator
-if [ -f "Arkbuild_package_cache/${CHIPSET}/ppsspp.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/ppsspp.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/ppsspp.sh | grep -oP '(?<=TAG=").*?(?=")')" ]; then
+if [ -f "Arkbuild_package_cache/${CHIPSET}/ppsspp.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/ppsspp.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/ppsspp.sh | grep -oP '(?<=TAG=").*?(?=")')" ]; then
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/ppsspp.tar.gz
 else
 	call_chroot "cd /home/ark &&
@@ -20,7 +20,7 @@ else
 	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/ppsspp.commit
 	fi
 	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/ppsspp.tar.gz Arkbuild/opt/ppsspp/
-	sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/ppsspp.sh | grep -oP '(?<=TAG=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/ppsspp.commit
+	sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/ppsspp.sh | grep -oP '(?<=TAG=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/ppsspp.commit
 fi
 sudo cp ppsspp/gamecontrollerdb.txt.${UNIT} Arkbuild/opt/ppsspp/assets/gamecontrollerdb.txt
 sudo cp ppsspp/ppsspp.sh Arkbuild/usr/local/bin/

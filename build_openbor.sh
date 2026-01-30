@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build and install OpenBOR standalone emulator
-if [ -f "Arkbuild_package_cache/${CHIPSET}/openbor.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/openbor.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/openbor.sh | grep -oP '(?<=git checkout )[[:alnum:]]+')" ]; then
+if [ -f "Arkbuild_package_cache/${CHIPSET}/openbor.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/openbor.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/openbor.sh | grep -oP '(?<=git checkout )[[:alnum:]]+')" ]; then
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/openbor.tar.gz
 else
 	call_chroot "cd /home/ark &&
