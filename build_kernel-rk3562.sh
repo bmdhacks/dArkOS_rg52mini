@@ -94,6 +94,16 @@ if [ -d "${BSP_PATH}/firmware" ]; then
     sudo cp -rL ${BSP_PATH}/firmware/* Arkbuild/lib/firmware/ 2>/dev/null || true
 fi
 
+# Extract compressed BSP Mali tarballs if not already extracted
+if [ ! -d "${BSP_PATH}/mali" ] && [ -f "${BSP_PATH}/mali.tar.gz" ]; then
+  echo "Extracting Mali 64-bit libraries..."
+  tar xzf "${BSP_PATH}/mali.tar.gz" -C "${BSP_PATH}"
+fi
+if [ ! -d "${BSP_PATH}/mali32" ] && [ -f "${BSP_PATH}/mali32.tar.gz" ]; then
+  echo "Extracting Mali 32-bit libraries..."
+  tar xzf "${BSP_PATH}/mali32.tar.gz" -C "${BSP_PATH}"
+fi
+
 # Install Mali g25p0 libraries (64-bit)
 # IMPORTANT: RK3562 uses Mali DDK g25p0, NOT g13p0 like RK3566!
 echo "Installing Mali g25p0 GPU libraries (64-bit)..."
