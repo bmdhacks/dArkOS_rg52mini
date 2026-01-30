@@ -1,0 +1,33 @@
+# RK3562 Bluetooth audio configuration
+# Used when Bluetooth audio is active
+
+pcm.!default {
+        type            plug
+        slave.pcm       "softvol"
+}
+
+ctl.!default {
+        type            bluealsa
+}
+
+pcm.ddmix {
+        ipc_key         1024
+        type            dmix
+        slave {
+                pcm         "bluealsa"
+                period_time 0
+                period_size 1024
+                buffer_size 4096
+                rate 44100
+        }
+}
+
+pcm.softvol {
+        type            softvol
+        slave {
+                pcm         "ddmix"
+        }
+        control {
+                name        "Master"
+        }
+}

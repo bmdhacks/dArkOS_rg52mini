@@ -5,7 +5,7 @@ if [ "$UNIT" == "rgb10" ]; then
   BUILD_UNIT="rgb10"
 elif [ "$UNIT" == "rg351mp" ] || [ "$UNIT" == "g350" ] || [ "$UNIT" == "a10mini" ]; then
   BUILD_UNIT="rg351mp"
-elif [ "$CHIPSET" == "rk3566" ]; then
+elif [ "$CHIPSET" == "rk3566" ] || [ "$CHIPSET" == "rk3562" ]; then
   BUILD_UNIT="rg503"
 fi
 

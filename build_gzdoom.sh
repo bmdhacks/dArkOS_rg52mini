@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build and install gzdoom standalone emulator
-if [ -f "Arkbuild_package_cache/${CHIPSET}/gzdoom.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/gzdoom.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/gzdoom.sh | grep -oP '(?<=TAG=").*?(?=")')" ]; then
+if [ -f "Arkbuild_package_cache/${CHIPSET}/gzdoom.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/gzdoom.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/gzdoom.sh | grep -oP '(?<=TAG=").*?(?=")')" ]; then
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/gzdoom.tar.gz
 else
 	call_chroot "cd /home/ark &&
@@ -24,7 +24,7 @@ else
 	if [ -f "Arkbuild_package_cache/${CHIPSET}/gzdoom.commit" ]; then
 	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/gzdoom.commit
 	fi
-	sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/gzdoom.sh | grep -oP '(?<=TAG=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/gzdoom.commit
+	sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/gzdoom.sh | grep -oP '(?<=TAG=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/gzdoom.commit
 	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/gzdoom.tar.gz Arkbuild/opt/gzdoom/ Arkbuild/home/ark/.config/gzdoom/
 fi
 sudo cp gzdoom/configs/${UNIT}/gzdoom.ini Arkbuild/home/ark/.config/gzdoom/

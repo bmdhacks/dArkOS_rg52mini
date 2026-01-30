@@ -20,7 +20,7 @@ fi
 if [ "$ARCH" == "arm-linux-gnueabihf" ]; then
   sudo chroot ${CHROOT_DIR}/ bash -c "source /root/.bashrc && cd /home/ark &&
     export CFLAGS=\"-Wno-error=int-conversion\" &&
-    if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CHIPSET}_core_builds.git; fi &&
+    if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds.git ${CHIPSET}_core_builds; fi &&
     cd ${CHIPSET}_core_builds &&
     chmod 777 builds-alt.sh &&
     eatmydata ./builds-alt.sh sdl2 &&
@@ -29,7 +29,7 @@ if [ "$ARCH" == "arm-linux-gnueabihf" ]; then
     "
 else
   sudo chroot ${CHROOT_DIR}/ bash -c "source /root/.bashrc && cd /home/ark &&
-    if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CHIPSET}_core_builds.git; fi &&
+    if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds.git ${CHIPSET}_core_builds; fi &&
     cd ${CHIPSET}_core_builds &&
     chmod 777 builds-alt.sh &&
     eatmydata ./builds-alt.sh sdl2 &&

@@ -16,7 +16,7 @@ fi
 if test -z "$(ls -l ${KODI_DEVENV}/usr/lib/aarch64-linux-gnu/libMali.so | grep g52- | tr -d '\0')"
 then
   $(grep g52 utils.sh)
-  sudo wget -t 3 -T 60 --no-check-certificate https://github.com/christianhaitian/${CHIPSET}_core_builds/raw/refs/heads/master/mali/aarch64/${whichmali} -O ${KODI_DEVENV}/usr/lib/aarch64-linux-gnu/${whichmali}
+  sudo wget -t 3 -T 60 --no-check-certificate https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET:-${CHIPSET}}_core_builds/raw/refs/heads/master/mali/aarch64/${whichmali} -O ${KODI_DEVENV}/usr/lib/aarch64-linux-gnu/${whichmali}
   cd ${KODI_DEVENV}/usr/lib/aarch64-linux-gnu
   sudo ln -sf ${whichmali} libMali.so
   for LIB in libEGL.so libEGL.so.1 libEGL.so.1.1.0 libGLES_CM.so libGLES_CM.so.1 libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1.0 libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 libGLESv2.so.2.1.0 libGLESv3.so libGLESv3.so.3 libgbm.so libgbm.so.1 libgbm.so.1.0.0 libmali.so libmali.so.1 libMaliOpenCL.so libOpenCL.so libwayland-egl.so libwayland-egl.so.1 libwayland-egl.so.1.0.0

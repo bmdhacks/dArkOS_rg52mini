@@ -24,8 +24,19 @@ export CROSS_COMPILE=aarch64-linux-gnu-
 export PATH=/opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/:$PATH
 if [ "$CHIPSET" == "rk3326" ]; then
   export whichmali=libmali-bifrost-g31-rxp0-gbm.so
+elif [ "$CHIPSET" == "rk3562" ]; then
+  # RK3562 uses Mali Bifrost G52 with DDK g25p0 (from BSP)
+  # Note: For RK3562, we use pre-built libraries from EmuELEC BSP
+  export whichmali=libmali-bifrost-g52-g25p0-gbm.so
 else
   export whichmali=libmali-bifrost-g52-g13p0-gbm.so
+fi
+
+# RK3562 uses RK3566 core builds (no separate repo exists)
+if [ "$CHIPSET" == "rk3562" ]; then
+  export CORE_BUILDS_CHIPSET="rk3566"
+else
+  export CORE_BUILDS_CHIPSET="$CHIPSET"
 fi
 
 function verify_action() {
@@ -83,9 +94,11 @@ function setup_arkbuild32() {
     # Bootstrap base system
     sudo debootstrap --no-check-gpg --include=eatmydata --resolve-deps --arch=armhf --foreign ${DEBIAN_CODE_NAME} Arkbuild32 http://deb.debian.org/debian/
     sudo cp /usr/bin/qemu-arm-static Arkbuild32/usr/bin/
-    echo 'Acquire::http::proxy "http://127.0.0.1:3142";' | sudo tee Arkbuild32/etc/apt/apt.conf.d/99proxy
-    sudo chroot Arkbuild32/ apt -y install eatmydata
-    sudo chroot Arkbuild32/ eatmydata /debootstrap/debootstrap --second-stage
+    sudo chroot Arkbuild32/ /debootstrap/debootstrap --second-stage
+    sudo chroot Arkbuild32/ bash -c "apt-get -y update && apt-get -y install eatmydata"
+    if [[ "${ENABLE_CACHE}" == "y" ]]; then
+      echo 'Acquire::http::proxy "http://127.0.0.1:3142";' | sudo tee Arkbuild32/etc/apt/apt.conf.d/99proxy
+    fi
 
     # Bind essential host filesystems into chroot for networking
     sudo mount --bind /dev Arkbuild32/dev
@@ -106,18 +119,35 @@ function setup_arkbuild32() {
     sudo chroot Arkbuild/ bash -c "ln -sfv /usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.${extension} /usr/lib/arm-linux-gnueabihf/libSDL2.so"
     sudo cp -a Arkbuild32/home/ark/linux-rga/build/librga.so* Arkbuild/usr/lib/arm-linux-gnueabihf/
     sudo cp -a Arkbuild32/home/ark/libgo2/libgo2.so* Arkbuild/usr/lib/arm-linux-gnueabihf/
-    # Place libmali manually (assumes you have libmali.so or mali drivers ready)
+    # Place libmali manually - check BSP first, then fall back to core_builds
     sudo mkdir -p Arkbuild32/usr/lib/arm-linux-gnueabihf/
-    wget -t 3 -T 60 --no-check-certificate https://github.com/christianhaitian/${CHIPSET}_core_builds/raw/refs/heads/master/mali/armhf/${whichmali}
-    sudo mv ${whichmali} Arkbuild32/usr/lib/arm-linux-gnueabihf/.
-    cd Arkbuild32/usr/lib/arm-linux-gnueabihf
-    sudo ln -sf ${whichmali} libMali.so
-    for LIB in libEGL.so libEGL.so.1 libEGL.so.1.1.0 libGLES_CM.so libGLES_CM.so.1 libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1.0 libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 libGLESv2.so.2.1.0 libGLESv3.so libGLESv3.so.3 libgbm.so libgbm.so.1 libgbm.so.1.0.0 libmali.so libmali.so.1 libMaliOpenCL.so libOpenCL.so libwayland-egl.so libwayland-egl.so.1 libwayland-egl.so.1.0.0
-    do
-      sudo rm -fv ${LIB}
-      sudo ln -sfv libMali.so ${LIB}
-    done
-    cd ../../../../
+
+    # Check for BSP Mali first (copied from Arkbuild by build_kernel)
+    if [ -f "Arkbuild/usr/lib/arm-linux-gnueabihf/libmali.so.1.9.0" ]; then
+      echo "Copying BSP Mali to Arkbuild32..."
+      sudo cp Arkbuild/usr/lib/arm-linux-gnueabihf/libmali.so.1.9.0 Arkbuild32/usr/lib/arm-linux-gnueabihf/
+      (
+        cd Arkbuild32/usr/lib/arm-linux-gnueabihf
+        sudo ln -sf libmali.so.1.9.0 libMali.so
+      )
+    else
+      wget -t 3 -T 60 --no-check-certificate https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/raw/refs/heads/master/mali/armhf/${whichmali}
+      sudo mv ${whichmali} Arkbuild32/usr/lib/arm-linux-gnueabihf/.
+      (
+        cd Arkbuild32/usr/lib/arm-linux-gnueabihf
+        sudo ln -sf ${whichmali} libMali.so
+      )
+    fi
+
+    # Create EGL/GLES/GBM symlinks - use subshell to preserve cwd
+    (
+      cd Arkbuild32/usr/lib/arm-linux-gnueabihf
+      for LIB in libEGL.so libEGL.so.1 libEGL.so.1.1.0 libGLES_CM.so libGLES_CM.so.1 libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1.0 libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 libGLESv2.so.2.1.0 libGLESv3.so libGLESv3.so.3 libgbm.so libgbm.so.1 libgbm.so.1.0.0 libmali.so libmali.so.1 libMaliOpenCL.so libOpenCL.so libwayland-egl.so libwayland-egl.so.1 libwayland-egl.so.1.0.0
+      do
+        sudo rm -fv ${LIB}
+        sudo ln -sfv libMali.so ${LIB}
+      done
+    )
 	sudo chroot Arkbuild32/ ldconfig
   fi
 }
