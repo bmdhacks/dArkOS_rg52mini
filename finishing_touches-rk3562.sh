@@ -1,0 +1,453 @@
+#!/bin/bash
+#
+# Finishing touches for RK3562 (RG56 Pro)
+#
+# Hardware specifics:
+# - SoC: Rockchip RK3562 (quad Cortex-A53)
+# - GPU: Mali Bifrost G52, DDK g25p0
+# - Display: 720x1280 MIPI DSI panel (portrait orientation)
+# - Audio: RK817 codec + RK628 HDMI bridge
+# - Input: play_joystick driver (custom gamepad), adc-keys, rk805 pwrkey
+# - PMIC: RK817 (battery, charger, codec integrated)
+#
+
+# Create extlinux.conf for boot
+sudo mkdir -p ${mountpoint}/extlinux
+cat <<EOF | sudo tee ${mountpoint}/extlinux/extlinux.conf
+LABEL dArkOS
+  LINUX /Image
+  FDT /${UNIT_DTB}.dtb
+  APPEND root=/dev/mmcblk1p4 rootfstype=ext4 initrd=/uInitrd rootwait rw fsck.repair=yes quiet splash net.ifnames=0 console=ttyFIQ0,1500000 console=tty1 plymouth.ignore-serial-consoles consoleblank=0 loglevel=0 video=HDMI-A-1:1280x720@60
+EOF
+
+# Copy optional files if present
+if [ -d "optional" ]; then
+  if [ ! -z "$(find optional/ -mindepth 1 -maxdepth 1)" ]; then
+    sudo cp optional/* ${mountpoint}/
+  fi
+fi
+
+# Tell systemd to ignore PowerKey presses - let the Global Hotkey daemon handle that
+echo "HandlePowerKey=ignore" | sudo tee -a Arkbuild/etc/systemd/logind.conf
+
+# Add important exports to .bashrc for user ark
+echo "export PATH=\"\$PATH:/usr/sbin\"" | sudo tee -a Arkbuild/home/ark/.bashrc
+sudo chroot Arkbuild/ bash -c "chown ark:ark /home/ark/.bashrc"
+
+# Set the hostname
+NAME="rg56pro"
+echo "$NAME" | sudo tee Arkbuild/etc/hostname
+echo -e "# This host address\n127.0.1.1\t${NAME}" | sudo tee -a Arkbuild/etc/hosts
+
+# Copy the necessary .asoundrc file for RK817 audio codec
+sudo cp audio/.asoundrc.${CHIPSET} Arkbuild/home/ark/.asoundrc
+sudo cp audio/.asoundrcbak.${CHIPSET} Arkbuild/home/ark/.asoundrcbak
+sudo cp audio/.asoundrcbt.${CHIPSET} Arkbuild/home/ark/.asoundrcbt
+sudo chroot Arkbuild/ bash -c "chown ark:ark /home/ark/.asoundrc*"
+sudo chroot Arkbuild/ bash -c "ln -sfv /home/ark/.asoundrc /etc/asound.conf"
+sudo chroot Arkbuild/ bash -c "cp -fv /usr/share/alsa/alsa.conf /usr/share/alsa/alsa.conf.mednafen"
+sudo chroot Arkbuild/ bash -c "sed -i '/\"\~\/.asoundrc\"/s//\"\~\/.asoundrc.mednafen\"/' /usr/share/alsa/alsa.conf.mednafen"
+
+# Sleep script and set default SuspendState to freeze
+sudo mkdir -p Arkbuild/usr/lib/systemd/system-sleep
+sudo cp scripts/sleep.${CHIPSET} Arkbuild/usr/lib/systemd/system-sleep/sleep
+sudo chmod 777 Arkbuild/usr/lib/systemd/system-sleep/sleep
+sudo sed -i "/SuspendState\=/c\SuspendState\=freeze" Arkbuild/etc/systemd/sleep.conf
+
+# Set DRM on boot
+sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/hdmi-test.sh &\") | crontab -"
+
+# Set performance governor to ondemand on boot
+sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/perfnorm quiet &\") | crontab -"
+
+# Copy necessary tools for expansion of ROOTFS and convert fat32 games partition to exfat on initial boot
+sudo cp scripts/expandtoexfat.sh.${CHIPSET} ${mountpoint}/expandtoexfat.sh
+sudo cp scripts/firstboot.sh ${mountpoint}/firstboot.sh
+sudo cp scripts/firstboot.service Arkbuild/etc/systemd/system/firstboot.service
+sudo chroot Arkbuild/ bash -c "systemctl enable firstboot"
+
+# Add hotkeydaemon service and python script
+sudo cp hotkeydaemon/killer_daemon.service Arkbuild/etc/systemd/system/killer_daemon.service
+sudo cp hotkeydaemon/killer_daemon.py Arkbuild/usr/local/bin/killer_daemon.py
+sudo chmod 777 Arkbuild/usr/local/bin/killer_daemon.py
+sudo chroot Arkbuild/ bash -c "systemctl disable killer_daemon"
+
+# Add amiga script
+sudo cp amiga/amiga.sh Arkbuild/usr/local/bin/
+
+# Generate fstab to be used after EASYROMS expansion
+if [ "$ROOT_FILESYSTEM_FORMAT" == "btrfs" ]; then
+  ROOT_FILESYSTEM_MOUNT_OPTIONS="${ROOT_FILESYSTEM_MOUNT_OPTIONS},ssd_spread"
+fi
+cat <<EOF | sudo tee ${mountpoint}/fstab.exfat
+/dev/mmcblk1p4  /  ${ROOT_FILESYSTEM_FORMAT} ${ROOT_FILESYSTEM_MOUNT_OPTIONS} 0 0
+
+/dev/mmcblk1p3 /boot vfat defaults,noatime 0 0
+/dev/mmcblk1p5 /roms exfat defaults,auto,umask=000,uid=1000,gid=1000,noatime 0 0
+/roms/tools /opt/system/Tools none nofail,x-systemd.device-timeout=7,bind
+EOF
+
+# Disable getty on tty0 and tty1
+sudo chroot Arkbuild/ bash -c "systemctl disable getty@tty0.service getty@tty1.service"
+
+# Disable some other unneeded services
+sudo chroot Arkbuild/ bash -c "systemctl disable ModemManager polkit"
+
+# Disable ssh service from automatically starting
+sudo chroot Arkbuild/ bash -c "systemctl disable ssh"
+
+# Update Message of the Day
+sudo cp -f scripts/00-header Arkbuild/etc/update-motd.d/00-header
+sudo cp -f scripts/10-help-text Arkbuild/etc/update-motd.d/10-help-text
+sudo rm -f Arkbuild/etc/motd
+sudo chmod 777 Arkbuild/etc/update-motd.d/*
+
+# Load rk915 WiFi kernel module at boot
+# The rk915 driver uses a platform alias (platform:rk915) and won't auto-load
+# from SDIO enumeration alone — it must be loaded explicitly so it can claim
+# the SDIO device when the bus is scanned.
+echo "rk915" | sudo tee -a Arkbuild/etc/modules-load.d/modules.conf
+
+# Disable some unneeded interfaces in NetworkManager
+cat <<EOF | sudo tee -a Arkbuild/etc/NetworkManager/NetworkManager.conf
+
+[device]
+wifi.scan-rand-mac-address=no
+
+[keyfile]
+unmanaged-devices=interface-name:p2p0;interface-name:ap0
+EOF
+
+# Remove requirement of sudo for controlling nmcli
+cat <<EOF | sudo tee -a Arkbuild/etc/polkit-1/rules.d/10-networkmanager.rules
+polkit.addRule(function(action, subject) {
+    if (action.id.indexOf("org.freedesktop.NetworkManager") == 0 &&
+        subject.isInGroup("netdev")) {
+        return polkit.Result.YES;
+    }
+});
+EOF
+
+# Default set timezone to New York
+sudo chroot Arkbuild/ bash -c "ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime"
+
+# Get libjpeg.so.8 from Debian snapshot for PortMaster compatibility
+wget -t 3 -T 60 --no-check-certificate https://snapshot.debian.org/archive/debian/20141009T042436Z/pool/main/libj/libjpeg8/libjpeg8_8d1-2_arm64.deb
+dpkg --fsys-tarfile libjpeg8_8d1-2_arm64.deb | tar -xO ./usr/lib/aarch64-linux-gnu/libjpeg.so.8.4.0 > libjpeg.so.8
+sudo mv -f libjpeg.so.8 Arkbuild/usr/lib/aarch64-linux-gnu/
+call_chroot "chown root:root /usr/lib/aarch64-linux-gnu/libjpeg.so.8"
+rm -f libjpeg8_8d1-2_arm64.deb
+if [[ "${BUILD_ARMHF}" == "y" ]]; then
+  wget -t 3 -T 60 --no-check-certificate https://snapshot.debian.org/archive/debian/20141009T042436Z/pool/main/libj/libjpeg8/libjpeg8_8d1-2_armhf.deb
+  dpkg --fsys-tarfile libjpeg8_8d1-2_armhf.deb | tar -xO ./usr/lib/arm-linux-gnueabihf/libjpeg.so.8.4.0 > libjpeg.so.8
+  sudo mv -f libjpeg.so.8 Arkbuild/usr/lib/arm-linux-gnueabihf/
+  call_chroot "chown root:root /usr/lib/arm-linux-gnueabihf/libjpeg.so.8"
+  rm -f libjpeg8_8d1-2_armhf.deb
+fi
+
+# Get libavcodec.so.58 from Debian security for PortMaster compatibility
+wget -t 3 -T 60 --no-check-certificate http://security.debian.org/debian-security/pool/updates/main/f/ffmpeg/libavcodec58_4.3.9-0+deb11u1_arm64.deb
+dpkg --fsys-tarfile libavcodec58_4.3.9-0+deb11u1_arm64.deb | tar -xO ./usr/lib/aarch64-linux-gnu/libavcodec.so.58.91.100 > libavcodec.so.58
+sudo mv -f libavcodec.so.58 Arkbuild/usr/lib/aarch64-linux-gnu/
+call_chroot "chown root:root /usr/lib/aarch64-linux-gnu/libavcodec.so.58"
+rm -f libavcodec58_4.3.9-0+deb11u1_arm64.deb
+if [[ "${BUILD_ARMHF}" == "y" ]]; then
+  wget -t 3 -T 60 --no-check-certificate http://security.debian.org/debian-security/pool/updates/main/f/ffmpeg/libavcodec58_4.3.9-0+deb11u1_armhf.deb
+  dpkg --fsys-tarfile libavcodec58_4.3.9-0+deb11u1_armhf.deb | tar -xO ./usr/lib/arm-linux-gnueabihf/libavcodec.so.58.91.100 > libavcodec.so.58
+  sudo mv -f libavcodec.so.58 Arkbuild/usr/lib/arm-linux-gnueabihf/
+  call_chroot "chown root:root /usr/lib/arm-linux-gnueabihf/libavcodec.so.58"
+  rm -f libavcodec58_4.3.9-0+deb11u1_armhf.deb
+fi
+
+# Various tools available through Options added here
+sudo mkdir -p Arkbuild/opt/system/Advanced
+sudo cp dArkOS_Tools/*.sh Arkbuild/opt/system/
+if [ -d "dArkOS_Tools/${CHIPSET}" ]; then
+  sudo cp dArkOS_Tools/${CHIPSET}/*.sh Arkbuild/opt/system/Advanced/
+  if [ -f "dArkOS_Tools/${CHIPSET}/Enable Low Battery Warning.sh" ]; then
+    sudo cp "dArkOS_Tools/${CHIPSET}/Enable Low Battery Warning.sh" Arkbuild/usr/local/bin/
+  fi
+  if [ -f "dArkOS_Tools/${CHIPSET}/Disable Low Battery Warning.sh" ]; then
+    sudo cp "dArkOS_Tools/${CHIPSET}/Disable Low Battery Warning.sh" Arkbuild/usr/local/bin/
+  fi
+fi
+sudo cp dArkOS_Tools/Advanced/*.sh Arkbuild/opt/system/Advanced/
+sudo cp scripts/"Enable Quick Mode".sh Arkbuild/opt/system/Advanced/
+if [ -f "scripts/${CHIPSET}/Fix Audio.sh" ]; then
+  sudo cp scripts/${CHIPSET}/"Fix Audio".sh Arkbuild/opt/system/Advanced/
+fi
+sudo cp scripts/"Switch to SD2 for Roms.sh" Arkbuild/opt/system/Advanced/
+sudo chroot Arkbuild/ bash -c "chown -R ark:ark /opt"
+sudo chmod -R 777 Arkbuild/opt/system/
+
+# Copy performance scripts
+sudo cp scripts/perf* Arkbuild/usr/local/bin/
+
+# Add preservation of SDL_VIDEO_EGL_DRIVER to sudoers
+cat <<EOF | sudo tee Arkbuild/etc/sudoers.d/ark_preserve_sdl_video_egl_driver
+Defaults        env_keep += "SDL_VIDEO_EGL_DRIVER"
+EOF
+sudo chmod 0440 Arkbuild/etc/sudoers.d/ark_preserve_sdl_video_egl_driver
+
+# Add USB DAC Support
+echo -e "Generating 20-usb-alsa.rules udev for usb dac support"
+echo -e "KERNEL==\"controlC[0-9]*\", DRIVERS==\"usb\", SYMLINK=\"snd/controlC7\"" | sudo tee Arkbuild/etc/udev/rules.d/20-usb-alsa.rules
+sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/checknswitchforusbdac.sh &\") | crontab -"
+
+# Disable requirement for sudo for setting niceness
+echo "ark              -       nice            -20" | sudo tee -a Arkbuild/etc/security/limits.conf
+
+# Speaker Toggle to set audio output to SPK on boot
+sudo mkdir -p Arkbuild/usr/local/bin
+sudo cp scripts/spktoggle.sh Arkbuild/usr/local/bin/
+sudo chmod 777 Arkbuild/usr/local/bin/spktoggle.sh
+sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/spktoggle.sh &\") | crontab -"
+sudo cp scripts/audiostate.service Arkbuild/etc/systemd/system/audiostate.service
+sudo chroot Arkbuild/ bash -c "systemctl enable audiostate"
+
+# Copy various other backend tools
+sudo cp -R scripts/.asoundbackup/ Arkbuild/usr/local/bin/
+sudo cp scripts/round_end.wav Arkbuild/usr/local/bin/
+sudo cp scripts/checkbrightonboot Arkbuild/usr/local/bin/
+sudo cp scripts/current_* Arkbuild/usr/local/bin/
+sudo cp scripts/finish.sh Arkbuild/usr/local/bin/
+sudo cp scripts/pause.sh Arkbuild/usr/local/bin/
+sudo cp scripts/finish.sh.qm Arkbuild/usr/local/bin/
+sudo cp scripts/pause.sh.qm Arkbuild/usr/local/bin/
+sudo cp scripts/finish.sh Arkbuild/usr/local/bin/finish.sh.orig
+sudo cp scripts/pause.sh Arkbuild/usr/local/bin/pause.sh.orig
+sudo cp scripts/speak_bat_life.sh Arkbuild/usr/local/bin/
+sudo cp scripts/spktoggle.sh Arkbuild/usr/local/bin/
+sudo cp scripts/volume.sh Arkbuild/usr/local/bin/
+if [ -d "scripts/${CHIPSET}" ]; then
+  sudo cp scripts/${CHIPSET}/* Arkbuild/usr/local/bin/
+fi
+sudo cp scripts/timezones Arkbuild/usr/local/bin/
+sudo cp scripts/BaRT_QuickMode.sh Arkbuild/usr/local/bin/
+sudo cp scripts/"Enable Quick Mode".sh Arkbuild/usr/local/bin/
+sudo cp scripts/"Disable Quick Mode".sh Arkbuild/usr/local/bin/
+sudo cp scripts/arkos_ap_mode.sh Arkbuild/usr/local/bin/
+sudo cp scripts/auto_suspend* Arkbuild/usr/local/bin/
+sudo cp scripts/processcheck.sh Arkbuild/usr/local/bin/
+sudo cp scripts/autosuspend.service Arkbuild/etc/systemd/system/
+sudo chroot Arkbuild/ bash -c "pip install --break-system-packages --root-user-action ignore inputs"
+sudo chroot Arkbuild/ bash -c "systemctl disable autosuspend"
+sudo cp scripts/keystroke.py Arkbuild/usr/local/bin/
+sudo cp scripts/b2.sh Arkbuild/usr/local/bin/
+sudo cp scripts/freej2me.sh Arkbuild/usr/local/bin/
+sudo cp scripts/easyrpg.sh Arkbuild/usr/local/bin/
+sudo cp scripts/get_last_played.sh Arkbuild/usr/local/bin/
+sudo cp scripts/gx4000.sh Arkbuild/usr/local/bin/
+sudo cp scripts/isitpng.sh Arkbuild/usr/local/bin/
+sudo cp scripts/neogeocd.sh Arkbuild/usr/local/bin/
+sudo cp scripts/netplay.sh Arkbuild/usr/local/bin/
+sudo mkdir -p Arkbuild/etc/hostapd
+sudo cp hostapd/hostapd.conf Arkbuild/etc/hostapd/
+sudo cp dnsmasq/dnsmasq.conf Arkbuild/etc/
+sudo cp scripts/sleep_governors.sh Arkbuild/usr/local/bin/
+sudo cp scripts/wasitpng.sh Arkbuild/usr/local/bin/
+sudo cp global/* Arkbuild/usr/local/bin/
+if [ -f "device/${CHIPSET}/uboot.img.anbernic" ]; then
+  sudo cp device/${CHIPSET}/uboot.img.anbernic Arkbuild/usr/local/bin/
+fi
+sudo cp scripts/Switch* Arkbuild/usr/local/bin/
+
+# Disable winbind as connectivity to Active Directory is not needed
+sudo chroot Arkbuild/ bash -c "systemctl disable winbind" 2>/dev/null || true
+# Disable samba-ad-dc as well as some other services
+sudo chroot Arkbuild/ bash -c "systemctl disable samba-ad-dc dnsmasq hostapd" 2>/dev/null || true
+# Disable e2scrub_reap if ext file system is not being used for rootfs
+if [ "$ROOT_FILESYSTEM_FORMAT" == "xfs" ] || [ "$ROOT_FILESYSTEM_FORMAT" == "btrfs" ]; then
+  sudo chroot Arkbuild/ bash -c "systemctl disable e2scrub_reap" 2>/dev/null || true
+fi
+# Set the default target to multi-user instead of graphical
+sudo chroot Arkbuild/ bash -c "systemctl set-default multi-user.target"
+
+# Make all scripts in /usr/local/bin executable
+sudo chmod 777 Arkbuild/usr/local/bin/*
+
+# Link themes folder to /roms/themes and clone some themes
+sudo rm -rf Arkbuild/etc/emulationstation/themes/
+sudo chroot Arkbuild/ bash -c "ln -sfv /roms/themes/ /etc/emulationstation/themes"
+
+# Link music folder to /roms/bgmusic
+sudo rm -rf Arkbuild/etc/emulationstation/music/
+sudo chroot Arkbuild/ bash -c "ln -sfv /roms/bgmusic/ /etc/emulationstation/music"
+
+# Set launchimage to PIC mode
+sudo chroot Arkbuild/ touch /home/ark/.config/.GameLoadingIModePIC
+
+# Set default volume
+sudo cp audio/asound.state.${CHIPSET} Arkbuild/var/local/asound.state
+
+# Set SDL Video Driver for bash
+echo "export SDL_VIDEO_EGL_DRIVER=libEGL.so" | sudo tee Arkbuild/etc/profile.d/SDL_VIDEO.sh
+
+# Set device name
+dNAME=`echo $NAME | tr '[:lower:]' '[:upper:]'`
+echo "$dNAME" | sudo tee Arkbuild/home/ark/.config/.DEVICE
+
+# Configure default samba share setup
+cat <<EOF | sudo tee -a Arkbuild/etc/samba/smb.conf
+[roms2]
+   comment = ROMS2
+   path = /roms2
+   browsable = yes
+   read only = no
+   map archive = no
+   map system = no
+   map hidden = no
+   guest ok = yes
+   read list = guest
+
+[roms]
+   comment = ROMS
+   path = /roms
+   browsable = yes
+   read only = no
+   map archive = no
+   map system = no
+   map hidden = no
+   guest ok = yes
+   read list = guest
+
+[opt]
+   comment = OPT
+   path = /opt
+   browsable = yes
+   read only = no
+   map archive = no
+   map system = no
+   map hidden = no
+   guest ok = yes
+   read list = guest
+
+[ark]
+   comment = ark
+   path = /home/ark
+   browsable = yes
+   read only = no
+   map archive = no
+   map system = no
+   map hidden = no
+   guest ok = yes
+   read list = guest
+EOF
+sudo chroot Arkbuild/ bash -c "systemctl disable smbd" 2>/dev/null || true
+sudo chroot Arkbuild/ bash -c "systemctl disable nmbd" 2>/dev/null || true
+
+# Set distro identification and version
+sudo mkdir -p Arkbuild/usr/share/plymouth/themes/
+cat <<EOF | sudo tee Arkbuild/usr/share/plymouth/themes/text.plymouth
+title=dArkOS (${BUILD_DATE})
+EOF
+echo "${BUILD_DATE}" | sudo tee Arkbuild/home/ark/.config/.VERSION
+
+# Set boot up welcome text
+sudo cp scripts/boot_text.sh Arkbuild/usr/local/bin/
+sudo chmod 777 Arkbuild/usr/local/bin/boot_text.sh
+sudo cp scripts/welcome-message.service Arkbuild/etc/systemd/system/welcome-message.service
+sudo chroot Arkbuild/ bash -c "systemctl enable welcome-message"
+
+# Mark completed dArkOS updates with this current build
+release_tags=( $(git -c 'versionsort.suffix=-' ls-remote --tags --sort='v:refname' https://github.com/christianhaitian/darkos-updates.git | cut -d/ -f3- | sed 's/^v//I') )
+if [[ ! -z "$release_tags" ]]; then
+  for release_tag in "${release_tags[@]}"
+  do
+    sudo touch Arkbuild/home/ark/.config/.update${release_tag}
+  done
+fi
+
+# Set the owner of the ark folder and all sub content to ark
+sudo chroot Arkbuild/ bash -c "chown -R ark:ark /home/ark"
+
+# Clone some themes to the tempthemes folder
+sudo mkdir Arkbuild/tempthemes
+sudo git clone --depth=1 https://github.com/Jetup13/es-theme-freeplay.git Arkbuild/tempthemes/es-theme-freeplay
+sudo git clone --depth=1 https://github.com/Jetup13/es-theme-minimal-arkos.git Arkbuild/tempthemes/es-theme-minimal-arkos
+sudo git clone --depth=1 https://github.com/Jetup13/es-theme-nes-box.git Arkbuild/tempthemes/es-theme-nes-box
+sudo git clone --depth=1 https://github.com/Jetup13/es-theme-switch.git Arkbuild/tempthemes/es-theme-switch
+sudo git clone --depth=1 https://github.com/dani7959/es-theme-replica.git Arkbuild/tempthemes/es-theme-replica
+
+sync
+sudo umount -l ${mountpoint}
+
+fat32_mountpoint=mnt/roms
+mkdir -p ${fat32_mountpoint}
+sudo mkdir -p Arkbuild/roms
+while read GAME_SYSTEM; do
+  if [[ ! "$GAME_SYSTEM" =~ ^# ]]; then
+    echo -e "Creating ${fat32_mountpoint}/${GAME_SYSTEM}\n"
+    sudo mkdir -p ${fat32_mountpoint}/${GAME_SYSTEM}
+  fi
+done <game_systems.txt
+
+# Add latest version of PortMaster install to roms/tools folder
+for (( ; ; ))
+do
+ PMver=$(curl --silent -qI https://github.com/PortsMaster/PortMaster-GUI/releases/latest | awk -F '/' '/^location/ {print  substr($NF, 1, length($NF)-1)}')
+ wget -t 3 -T 60 --no-check-certificate https://github.com/PortsMaster/PortMaster-GUI/releases/download/${PMver}/Install.PortMaster.sh
+ if [ $? == 0 ]; then
+  break
+ fi
+ sleep 10
+done
+sudo mv -f Install.PortMaster.sh ${fat32_mountpoint}/tools/Install.PortMaster.sh
+chmod 777 ${fat32_mountpoint}/tools/Install.PortMaster.sh
+
+# Add latest version of ThemeMaster to roms/tools folder
+for (( ; ; ))
+do
+ wget -t 3 -T 60 --no-check-certificate https://github.com/JohnIrvine1433/ThemeMaster/archive/refs/heads/master.zip
+ if [ $? == 0 ]; then
+  break
+ fi
+ sleep 10
+done
+sudo unzip -X -o master.zip -d ${fat32_mountpoint}/tools/
+sudo rm -rf ${fat32_mountpoint}/tools/ThemeMaster
+sudo mv -f ${fat32_mountpoint}/tools/ThemeMaster-master/ThemeMaster ${fat32_mountpoint}/tools/
+sudo mv -f ${fat32_mountpoint}/tools/ThemeMaster-master/ThemeMaster.sh ${fat32_mountpoint}/tools/
+sudo rm -rf ${fat32_mountpoint}/tools/ThemeMaster-master/
+rm -f master.zip
+
+# Get some sample pico-8 games
+sudo rm -rf /roms/pico-8/carts/*
+sudo wget -t 3 -T 60 --no-check-certificate https://www.lexaloffle.com/bbs/cposts/1/15133.p8.png -O ${fat32_mountpoint}/pico-8/carts/celeste.p8.png
+sudo wget -t 3 -T 60 --no-check-certificate https://www.lexaloffle.com/bbs/cposts/sc/scrap_boy-6.p8.png -O ${fat32_mountpoint}/pico-8/carts/scrap_boy-6.p8.png
+sudo wget -t 3 -T 60 --no-check-certificate https://www.lexaloffle.com/bbs/cposts/di/dinkykong-0.p8.png -O ${fat32_mountpoint}/pico-8/carts/dinkykong-0.p8.png
+sudo wget -t 3 -T 60 --no-check-certificate https://www.lexaloffle.com/bbs/cposts/po/poom_0-9.p8.png -O ${fat32_mountpoint}/pico-8/carts/poom_0-9.p8.png
+sudo wget -t 3 -T 60 --no-check-certificate https://www.lexaloffle.com/bbs/cposts/ch/cherrybomb-0.p8.png -O ${fat32_mountpoint}/pico-8/carts/cherrybomb-0.p8.png
+
+# Copy default game launch images
+if [ -f "launchimages/loading.ascii.${UNIT}" ]; then
+  sudo cp launchimages/loading.ascii.${UNIT} ${fat32_mountpoint}/launchimages/loading.ascii
+else
+  sudo cp launchimages/loading.ascii.353m ${fat32_mountpoint}/launchimages/loading.ascii
+fi
+if [ -f "launchimages/loading.jpg.${UNIT}" ]; then
+  sudo cp launchimages/loading.jpg.${UNIT} ${fat32_mountpoint}/launchimages/loading.jpg
+else
+  sudo cp launchimages/loading.jpg.353m ${fat32_mountpoint}/launchimages/loading.jpg
+fi
+
+# Copy various tools to roms folders
+sudo cp -a ecwolf/Scan* ${fat32_mountpoint}/wolf/
+sudo cp -a scummvm/scripts/Scan* ${fat32_mountpoint}/scummvm/
+sudo cp -a hypseus-singe/scripts/Scan* ${fat32_mountpoint}/alg/
+sudo cp -a scummvm/scripts/menu.scummvm ${fat32_mountpoint}/scummvm/
+
+# Clone some themes to the roms/themes folder
+sudo git clone --depth=1 https://github.com/Jetup13/es-theme-nes-box.git ${fat32_mountpoint}/themes/es-theme-nes-box
+sync
+
+# Create roms.tar for use after exfat partition creation
+sudo tar -C mnt/ -cvf Arkbuild/roms.tar roms
+
+# Remove and cleanup fat32 roms mountpoint
+sudo chmod -R 755 ${fat32_mountpoint}
+sync
+
+sudo rm -rf ${fat32_mountpoint}
+
+echo "Finishing touches complete for RK3562"

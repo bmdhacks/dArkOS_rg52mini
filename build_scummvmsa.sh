@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build and install SCUMMVM standalone emulator
-if [ -f "Arkbuild_package_cache/${CHIPSET}/scummvm.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/scummvm.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/scummvm.sh | grep -oP '(?<=TAG=").*?(?=")')" ]; then
+if [ -f "Arkbuild_package_cache/${CHIPSET}/scummvm.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/scummvm.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/scummvm.sh | grep -oP '(?<=TAG=").*?(?=")')" ]; then
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/scummvm.tar.gz
 else
 	call_chroot "cd /home/ark &&
@@ -26,7 +26,7 @@ else
 	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/scummvm.commit
 	fi
 	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/scummvm.tar.gz Arkbuild/opt/scummvm/
-	sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CHIPSET}_core_builds/refs/heads/master/scripts/scummvm.sh | grep -oP '(?<=TAG=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/scummvm.commit
+	sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/scummvm.sh | grep -oP '(?<=TAG=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/scummvm.commit
 fi
 
 sudo mkdir -p Arkbuild/home/ark/.config/scummvm

@@ -50,6 +50,7 @@ sudo chroot ${CHROOT_DIR}/ bash -c "/usr/sbin/update-ccache-symlinks"
 sudo chroot ${CHROOT_DIR}/ bash -c "ln -s /usr/include/libdrm/ /usr/include/drm"
 
 # Place libmali manually (assumes you have libmali.so or mali drivers ready)
+# For rk3562, Mali libs are pre-installed from BSP in build_kernel-rk3562.sh
 ARCHITECTURE_ARRAY=("aarch64-linux-gnu")
 if [[ "${BUILD_ARMHF}" == "y" ]]; then
   ARCHITECTURE_ARRAY+=("arm-linux-gnueabihf")
@@ -62,16 +63,33 @@ do
     FOLDER="armhf"
   fi
   sudo mkdir -p Arkbuild/usr/lib/${ARCHITECTURE}/
-  wget -t 3 -T 60 --no-check-certificate https://github.com/christianhaitian/${CHIPSET}_core_builds/raw/refs/heads/master/mali/${FOLDER}/${whichmali}
-  sudo mv ${whichmali} Arkbuild/usr/lib/${ARCHITECTURE}/.
-  cd Arkbuild/usr/lib/${ARCHITECTURE}
-  sudo ln -sf ${whichmali} libMali.so
-  for LIB in libEGL.so libEGL.so.1 libEGL.so.1.1.0 libGLES_CM.so libGLES_CM.so.1 libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1.0 libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 libGLESv2.so.2.1.0 libGLESv3.so libGLESv3.so.3 libgbm.so libgbm.so.1 libgbm.so.1.0.0 libmali.so libmali.so.1 libMaliOpenCL.so libOpenCL.so libwayland-egl.so libwayland-egl.so.1 libwayland-egl.so.1.0.0
-  do
-    sudo rm -fv ${LIB}
-    sudo ln -sfv libMali.so ${LIB}
-  done
-  cd ../../../../
+
+  # Check if Mali already installed (rk3562 BSP case)
+  if [ -f "Arkbuild/usr/lib/${ARCHITECTURE}/libmali.so.1.9.0" ]; then
+    echo "Mali libraries already installed from BSP, creating symlinks..."
+    (
+      cd Arkbuild/usr/lib/${ARCHITECTURE}
+      sudo ln -sf libmali.so.1.9.0 libMali.so
+    )
+  else
+    # Download Mali from core_builds repo (rk3566, rk3326, etc.)
+    wget -t 3 -T 60 --no-check-certificate https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/raw/refs/heads/master/mali/${FOLDER}/${whichmali}
+    sudo mv ${whichmali} Arkbuild/usr/lib/${ARCHITECTURE}/.
+    (
+      cd Arkbuild/usr/lib/${ARCHITECTURE}
+      sudo ln -sf ${whichmali} libMali.so
+    )
+  fi
+
+  # Create EGL/GLES/GBM symlinks - use subshell to preserve cwd
+  (
+    cd Arkbuild/usr/lib/${ARCHITECTURE}
+    for LIB in libEGL.so libEGL.so.1 libEGL.so.1.1.0 libGLES_CM.so libGLES_CM.so.1 libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1.0 libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 libGLESv2.so.2.1.0 libGLESv3.so libGLESv3.so.3 libgbm.so libgbm.so.1 libgbm.so.1.0.0 libmali.so libmali.so.1 libMaliOpenCL.so libOpenCL.so libwayland-egl.so libwayland-egl.so.1 libwayland-egl.so.1.0.0
+    do
+      sudo rm -fv ${LIB}
+      sudo ln -sfv libMali.so ${LIB}
+    done
+  )
 done
 sudo chroot Arkbuild/ ldconfig
 

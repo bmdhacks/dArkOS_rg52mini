@@ -11,7 +11,7 @@ if [ -f "Arkbuild_package_cache/${CHIPSET}/retrorun.tar.gz" ] && [ "$(cat Arkbui
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/retrorun.tar.gz
 else
 	call_chroot "cd /home/ark &&
-	  if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CHIPSET}_core_builds.git; fi &&
+	  if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds.git ${CHIPSET}_core_builds; fi &&
 	  cd ${CHIPSET}_core_builds &&
 	  chmod 777 builds-alt.sh &&
 	  ./builds-alt.sh retrorun
@@ -31,7 +31,7 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/retrorun32.tar.gz
   else
 	  call_chroot32 "cd /home/ark &&
-		if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CHIPSET}_core_builds.git; fi &&
+		if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds.git ${CHIPSET}_core_builds; fi &&
 		cd ${CHIPSET}_core_builds &&
 		chmod 777 builds-alt.sh &&
 		./builds-alt.sh retrorun
