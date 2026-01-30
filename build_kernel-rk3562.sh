@@ -64,6 +64,12 @@ if [ ! -f "${DTB_FILE}" ]; then
   exit 1
 fi
 
+# Ensure kernel .config exists
+if [ ! -f "${KERNEL_SRC_PATH}/.config" ]; then
+  echo "Generating kernel .config from rg56pro_defconfig..."
+  make -C "${KERNEL_SRC_PATH}" rg56pro_defconfig
+fi
+
 # Build kernel Image
 echo "Building kernel Image..."
 make -C "${KERNEL_SRC_PATH}" -j$(nproc) Image
