@@ -21,18 +21,16 @@ elif [ -e "/home/ark/.config/.GameLoadingIModeGIF" ] && [[ $(tty) != *"pts"* ]];
     delay="1.5"
   #fi
   if [ -f "/roms/launchimages/loading.gif" ]; then
-    ffplay -x 1280 -y 720 -loglevel quiet -autoexit /roms/launchimages/loading.gif &
-    PROC=$!
-    (sleep ${delay}s; kill -9 $PROC)
+    sudo -u ark ffplay -x 1280 -y 720 -loglevel quiet -autoexit /roms/launchimages/loading.gif &
+    (sleep ${delay}s; kill -9 $(pidof ffplay))
   else
     continue
   fi
 
 elif [ -e "/home/ark/.config/.GameLoadingIModeVID" ] && [[ $(tty) != *"pts"* ]]; then
   if [ -f "/roms/launchimages/loading.mp4" ]; then
-    ffplay -x 1280 -y 720 -loglevel quiet -autoexit /roms/launchimages/loading.mp4 &
-    PROC=$!
-    (sleep 4s; kill -9 $PROC)
+    sudo -u ark ffplay -x 1280 -y 720 -loglevel quiet -autoexit /roms/launchimages/loading.mp4 &
+    (sleep 4s; kill -9 $(pidof ffplay))
   else
     continue
   fi

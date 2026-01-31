@@ -10,7 +10,7 @@ function Enable {
   else
     sudo sed -i "/ssid\=/c\ssid\=ArkOS_AP" /etc/hostapd/hostapd.conf
   fi
-  if [ ! -z ${host_ap_masked} ]; then
+  if [ ! -z "${host_ap_masked}" ]; then
     sudo systemctl unmask hostapd.service
     sudo systemctl disable hostapd.service
     sudo systemctl disable dnsmasq.service
