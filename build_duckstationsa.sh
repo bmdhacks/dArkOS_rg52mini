@@ -3,7 +3,12 @@
 # Build and install Duckstation standalone emulator
 if [ -f "Arkbuild_package_cache/${CHIPSET}/duckstationsa.tar.gz" ]; then
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/duckstationsa.tar.gz
-else
+    if [ ! -f "Arkbuild/opt/duckstation/duckstation-nogui" ]; then
+        echo "WARNING: DuckStation cache tarball is incomplete, rebuilding from source..."
+        sudo rm -f Arkbuild_package_cache/${CHIPSET}/duckstationsa.tar.gz
+    fi
+fi
+if [ ! -f "Arkbuild/opt/duckstation/duckstation-nogui" ] && [ ! -f "Arkbuild_package_cache/${CHIPSET}/duckstationsa.tar.gz" ]; then
 	call_chroot "cd /home/ark &&
 	  cd ${CHIPSET}_core_builds &&
 	  chmod 777 builds-alt.sh &&

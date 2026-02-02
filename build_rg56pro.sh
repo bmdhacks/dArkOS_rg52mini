@@ -41,8 +41,8 @@ export BSP_PATH="${PWD}/BSP"
 # Enable armhf (32-bit) support for RetroArch32 and other 32-bit emulators
 export BUILD_ARMHF=y
 
-# Debian codename to use
-export DEBIAN_CODE_NAME=bookworm
+# Debian codename to use (Trixie matches upstream dArkOS package lists)
+export DEBIAN_CODE_NAME=trixie
 
 # Load shared utilities
 source ./utils.sh
