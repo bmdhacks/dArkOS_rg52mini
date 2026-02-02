@@ -3,16 +3,17 @@
 # Kernel Build and Installation for RK3562 (RG56 Pro)
 #
 # Builds the kernel from source (kernel_rk3562/) with fbdev emulation
-# enabled, and installs BSP components (Mali GPU, firmware, bootloader)
-# from the EmuELEC BSP extract.
+# enabled, and installs BSP components (firmware, bootloader) from the
+# EmuELEC BSP extract. Mali GPU libraries are handled by build_deps.sh
+# (downloaded from rk3566_core_builds, g13p0 DDK).
 #
 # Kernel source required at: ${KERNEL_SRC_PATH}
 #   - Must have .config already prepared (use proc.config from device)
 #   - Must have rk915 WiFi driver patched in
 #
 # BSP components required in ${BSP_PATH}:
-#   - mali/libmali.so.1.9.0 (Mali DDK g25p0, NOT g13p0!)
-#   - mali32/libmali.so (32-bit for RetroArch32)
+#   - librga/ (BSP librga.so.2.1.0 + headers for RGA3 ABI)
+#   - mali/libmali-hook.so.1.9.0 (optional - Mali hook library)
 #   - firmware/ (WiFi, Bluetooth, etc.)
 #   - uboot.img (optional - U-Boot FIT image)
 #   - bootloader_area.img (raw bootloader including idbloader)
@@ -50,12 +51,8 @@ if [ ! -d "${BSP_PATH}/mali32" ] && [ -f "${BSP_PATH}/mali32.tar.gz" ]; then
 fi
 
 # Verify required BSP components
-for component in "mali/libmali.so.1.9.0"; do
-  if [ ! -f "${BSP_PATH}/${component}" ]; then
-    echo "ERROR: Required BSP component not found: ${BSP_PATH}/${component}"
-    exit 1
-  fi
-done
+# Mali GPU blob is downloaded by build_deps.sh (g13p0 from rk3566_core_builds)
+# Only the DTB and firmware are required from BSP
 
 # Verify patched DTB exists
 if [ ! -f "${DTB_FILE}" ]; then
@@ -111,64 +108,16 @@ if [ -d "${BSP_PATH}/firmware" ]; then
     sudo cp -rL ${BSP_PATH}/firmware/* Arkbuild/lib/firmware/ 2>/dev/null || true
 fi
 
-# Install Mali g25p0 libraries (64-bit)
-# IMPORTANT: RK3562 uses Mali DDK g25p0, NOT g13p0 like RK3566!
-echo "Installing Mali g25p0 GPU libraries (64-bit)..."
+# Mali GPU libraries are downloaded and installed by build_deps.sh (same as RK3566).
+# The RK3562 uses g13p0 (set in utils.sh) — the BSP g24p0 has a broken GLES 1.0.
+# Install libmali-hook from BSP if available.
 sudo mkdir -p Arkbuild/usr/lib/aarch64-linux-gnu/
-sudo cp ${BSP_PATH}/mali/libmali.so.1.9.0 Arkbuild/usr/lib/aarch64-linux-gnu/
-sudo cp ${BSP_PATH}/mali/libmali-hook.so.1.9.0 Arkbuild/usr/lib/aarch64-linux-gnu/
-
-# Create Mali symlinks (64-bit) - use subshell to preserve cwd
+sudo cp ${BSP_PATH}/mali/libmali-hook.so.1.9.0 Arkbuild/usr/lib/aarch64-linux-gnu/ 2>/dev/null || true
 (
   cd Arkbuild/usr/lib/aarch64-linux-gnu
-  sudo ln -sf libmali.so.1.9.0 libmali.so.1
-  sudo ln -sf libmali.so.1 libmali.so
-  sudo ln -sf libmali-hook.so.1.9.0 libmali-hook.so.1
-  sudo ln -sf libmali-hook.so.1 libmali-hook.so
-
-  # Create EGL/GLES/GBM symlinks pointing to libmali
-  for LIB in libEGL.so libEGL.so.1 libEGL.so.1.1.0 \
-             libGLES_CM.so libGLES_CM.so.1 \
-             libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1.0 \
-             libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 libGLESv2.so.2.1.0 \
-             libGLESv3.so libGLESv3.so.3 \
-             libgbm.so libgbm.so.1 libgbm.so.1.0.0 \
-             libOpenCL.so libMaliOpenCL.so \
-             libwayland-egl.so libwayland-egl.so.1 libwayland-egl.so.1.0.0
-  do
-    sudo rm -f ${LIB}
-    sudo ln -sf libmali.so ${LIB}
-  done
+  sudo ln -sf libmali-hook.so.1.9.0 libmali-hook.so.1 2>/dev/null || true
+  sudo ln -sf libmali-hook.so.1 libmali-hook.so 2>/dev/null || true
 )
-
-# Install Mali libraries (32-bit) for RetroArch32 and other armhf apps
-if [[ "${BUILD_ARMHF}" == "y" ]] && [ -f "${BSP_PATH}/mali32/libmali.so" ]; then
-  echo "Installing Mali g25p0 GPU libraries (32-bit)..."
-  sudo mkdir -p Arkbuild/usr/lib/arm-linux-gnueabihf/
-  sudo cp ${BSP_PATH}/mali32/libmali.so Arkbuild/usr/lib/arm-linux-gnueabihf/libmali.so.1.9.0
-
-  # Use subshell to preserve cwd
-  (
-    cd Arkbuild/usr/lib/arm-linux-gnueabihf
-    sudo ln -sf libmali.so.1.9.0 libmali.so.1
-    sudo ln -sf libmali.so.1 libmali.so
-    sudo ln -sf libmali.so libMali.so
-
-    # Create EGL/GLES/GBM symlinks (32-bit)
-    for LIB in libEGL.so libEGL.so.1 libEGL.so.1.1.0 \
-               libGLES_CM.so libGLES_CM.so.1 \
-               libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1.0 \
-               libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 libGLESv2.so.2.1.0 \
-               libGLESv3.so libGLESv3.so.3 \
-               libgbm.so libgbm.so.1 libgbm.so.1.0.0 \
-               libOpenCL.so libMaliOpenCL.so \
-               libwayland-egl.so libwayland-egl.so.1 libwayland-egl.so.1.0.0
-    do
-      sudo rm -f ${LIB}
-      sudo ln -sf libMali.so ${LIB}
-    done
-  )
-fi
 
 # Run ldconfig to update library cache
 sudo chroot Arkbuild/ ldconfig
@@ -252,7 +201,7 @@ echo "${KERNEL_VERSION}" | sudo tee Arkbuild/boot/kernel_version
 
 echo "Kernel build and installation complete"
 echo "  Kernel: ${KERNEL_VERSION}"
-echo "  Mali: DDK g25p0 (Bifrost G52)"
+echo "  Mali: handled by build_deps.sh (${whichmali})"
 echo "  DTB: ${UNIT_DTB}.dtb"
 
 # Note: No cd needed - we should still be in the original directory

@@ -4,7 +4,7 @@
 #
 # Hardware specifics:
 # - SoC: Rockchip RK3562 (quad Cortex-A53)
-# - GPU: Mali Bifrost G52, DDK g25p0
+# - GPU: Mali Bifrost G52, DDK g13p0 (from rk3566_core_builds)
 # - Display: 720x1280 MIPI DSI panel (portrait orientation)
 # - Audio: RK817 codec + RK628 HDMI bridge
 # - Input: play_joystick driver (custom gamepad), adc-keys, rk805 pwrkey

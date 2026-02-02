@@ -6,6 +6,11 @@ if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.tar.gz" ] && [ "$(c
 else
 	while true
 	do
+	  # Copy dArkOS-specific RetroArch patches into core_builds patches dir
+	  if ls retroarch-patches/retroarch-patch-* 1>/dev/null 2>&1; then
+	    echo "Injecting dArkOS RetroArch patches..."
+	    sudo cp retroarch-patches/retroarch-patch-* Arkbuild/home/ark/${CHIPSET}_core_builds/patches/
+	  fi
 	  call_chroot "cd /home/ark &&
 		cd ${CHIPSET}_core_builds &&
 		chmod 777 builds-alt.sh &&
@@ -202,6 +207,11 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
 		sudo chroot Arkbuild32/ mkdir -p /home/ark
 		while true
 		do
+		  # Copy dArkOS-specific RetroArch patches into core_builds patches dir (32-bit)
+		  if ls retroarch-patches/retroarch-patch-* 1>/dev/null 2>&1; then
+		    echo "Injecting dArkOS RetroArch patches (32-bit)..."
+		    sudo cp retroarch-patches/retroarch-patch-* Arkbuild32/home/ark/${CHIPSET}_core_builds/patches/
+		  fi
 		  call_chroot32 "cd /home/ark &&
 			if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds.git ${CHIPSET}_core_builds; fi &&
 			cd ${CHIPSET}_core_builds &&
@@ -237,12 +247,7 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
 		if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit" ]; then
 	      sudo rm -f Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit
 		fi
-		# Use libmali.so.1.9.0 for BSP Mali (rk3562) or ${whichmali} for core_builds Mali
-		if [ -f "Arkbuild/usr/lib/arm-linux-gnueabihf/libmali.so.1.9.0" ]; then
-		  MALI_LIB="libmali.so.1.9.0"
-		else
-		  MALI_LIB="${whichmali}"
-		fi
+		MALI_LIB="${whichmali}"
 		sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz Arkbuild/opt/retroarch/bin/retroarch32 Arkbuild/home/ark/.config/retroarch32/ Arkbuild/usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.${extension} Arkbuild/usr/lib/arm-linux-gnueabihf/librga.so* Arkbuild/usr/lib/arm-linux-gnueabihf/libgo2.so* Arkbuild/usr/lib/arm-linux-gnueabihf/${MALI_LIB} Arkbuild/usr/lib/arm-linux-gnueabihf/{libEGL.so,libEGL.so.1,libEGL.so.1.1.0,libGLES_CM.so,libGLES_CM.so.1,libGLESv1_CM.so,libGLESv1_CM.so.1,libGLESv1_CM.so.1.1.0,libGLESv2.so,libGLESv2.so.2,libGLESv2.so.2.0.0,libGLESv2.so.2.1.0,libGLESv3.so,libGLESv3.so.3,libgbm.so,libgbm.so.1,libgbm.so.1.0.0,libmali.so,libmali.so.1,libMaliOpenCL.so,libOpenCL.so,libwayland-egl.so,libwayland-egl.so.1,libwayland-egl.so.1.0.0,libMali.so}
 		sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/retroarch.sh | grep -oP '(?<=tag=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit
 	fi
