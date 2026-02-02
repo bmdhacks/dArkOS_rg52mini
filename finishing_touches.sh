@@ -145,33 +145,8 @@ EOF
 # Default set timezone to New York
 sudo chroot Arkbuild/ bash -c "ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime"
 
-# Get libjpeg.so.8 from Debian snapshot for PortMaster compatibility
-wget -t 3 -T 60 --no-check-certificate https://snapshot.debian.org/archive/debian/20141009T042436Z/pool/main/libj/libjpeg8/libjpeg8_8d1-2_arm64.deb
-dpkg --fsys-tarfile libjpeg8_8d1-2_arm64.deb | tar -xO ./usr/lib/aarch64-linux-gnu/libjpeg.so.8.4.0 > libjpeg.so.8
-sudo mv -f libjpeg.so.8 Arkbuild/usr/lib/aarch64-linux-gnu/
-call_chroot "chown root:root /usr/lib/aarch64-linux-gnu/libjpeg.so.8"
-rm -f libjpeg8_8d1-2_arm64.deb
-if [[ "${BUILD_ARMHF}" == "y" ]]; then
-  wget -t 3 -T 60 --no-check-certificate https://snapshot.debian.org/archive/debian/20141009T042436Z/pool/main/libj/libjpeg8/libjpeg8_8d1-2_armhf.deb
-  dpkg --fsys-tarfile libjpeg8_8d1-2_armhf.deb | tar -xO ./usr/lib/arm-linux-gnueabihf/libjpeg.so.8.4.0 > libjpeg.so.8
-  sudo mv -f libjpeg.so.8 Arkbuild/usr/lib/arm-linux-gnueabihf/
-  call_chroot "chown root:root /usr/lib/arm-linux-gnueabihf/libjpeg.so.8"
-  rm -f libjpeg8_8d1-2_armhf.deb
-fi
-
-# Get libavcodec.so.58 from Debian security for PortMaster compatibility
-wget -t 3 -T 60 --no-check-certificate http://security.debian.org/debian-security/pool/updates/main/f/ffmpeg/libavcodec58_4.3.9-0+deb11u1_arm64.deb
-dpkg --fsys-tarfile libavcodec58_4.3.9-0+deb11u1_arm64.deb | tar -xO ./usr/lib/aarch64-linux-gnu/libavcodec.so.58.91.100 > libavcodec.so.58
-sudo mv -f libavcodec.so.58 Arkbuild/usr/lib/aarch64-linux-gnu/
-call_chroot "chown root:root /usr/lib/aarch64-linux-gnu/libavcodec.so.58"
-rm -f libavcodec58_4.3.9-0+deb11u1_arm64.deb
-if [[ "${BUILD_ARMHF}" == "y" ]]; then
-  wget -t 3 -T 60 --no-check-certificate http://security.debian.org/debian-security/pool/updates/main/f/ffmpeg/libavcodec58_4.3.9-0+deb11u1_armhf.deb
-  dpkg --fsys-tarfile libavcodec58_4.3.9-0+deb11u1_armhf.deb | tar -xO ./usr/lib/arm-linux-gnueabihf/libavcodec.so.58.91.100 > libavcodec.so.58
-  sudo mv -f libavcodec.so.58 Arkbuild/usr/lib/arm-linux-gnueabihf/
-  call_chroot "chown root:root /usr/lib/arm-linux-gnueabihf/libavcodec.so.58"
-  rm -f libavcodec58_4.3.9-0+deb11u1_armhf.deb
-fi
+# Fetch older Debian library versions for PortMaster compatibility
+source ./fetch_compat_libs.sh
 
 # Various tools available through Options added here
 sudo mkdir -p Arkbuild/opt/system/Advanced
