@@ -64,12 +64,12 @@ do
   fi
   sudo mkdir -p Arkbuild/usr/lib/${ARCHITECTURE}/
 
-  # Check if Mali already installed (rk3562 BSP case)
-  if [ -f "Arkbuild/usr/lib/${ARCHITECTURE}/libmali.so.1.9.0" ]; then
-    echo "Mali libraries already installed from BSP, creating symlinks..."
+  # Check if Mali already installed (e.g. from build_kernel step)
+  if [ -f "Arkbuild/usr/lib/${ARCHITECTURE}/libmali.so.1" ]; then
+    echo "Mali libraries already installed, creating symlinks..."
     (
       cd Arkbuild/usr/lib/${ARCHITECTURE}
-      sudo ln -sf libmali.so.1.9.0 libMali.so
+      sudo ln -sf libmali.so.1 libMali.so
     )
   else
     # Download Mali from core_builds repo (rk3566, rk3326, etc.)
@@ -96,18 +96,36 @@ sudo chroot Arkbuild/ ldconfig
 # Install meson
 sudo chroot ${CHROOT_DIR}/ bash -c "git clone https://github.com/mesonbuild/meson.git && ln -s /meson/meson.py /usr/bin/meson"
 
-# Build and install librga
-sudo chroot ${CHROOT_DIR}/ bash -c "cd /home/ark &&
-  git clone https://github.com/christianhaitian/linux-rga.git &&
-  cd linux-rga &&
-  git checkout 1fc02d56d97041c86f01bc1284b7971c6098c5fb &&
-  meson build && cd build &&
-  meson compile &&
-  cp -r librga.so* /usr/lib/${ARCH}/ &&
-  cd .. &&
-  mkdir -p /usr/local/include/rga &&
-  cp -f drmrga.h rga.h RgaApi.h RockchipRgaMacro.h /usr/local/include/rga/
-  "
+# Install librga
+if [ "$CHIPSET" == "rk3562" ] && [ "$BIT" == "64" ]; then
+  # RK3562 64-bit uses BSP librga (matches RGA3 kernel driver ABI).
+  # The christianhaitian/linux-rga build has struct layout mismatches with the RGA3
+  # kernel framework, causing "Cannot get src1 channel buffer" errors.
+  sudo cp BSP/librga/librga.so.2.1.0 ${CHROOT_DIR}/usr/lib/${ARCH}/
+  sudo ln -sf librga.so.2.1.0 ${CHROOT_DIR}/usr/lib/${ARCH}/librga.so.2
+  sudo ln -sf librga.so.2 ${CHROOT_DIR}/usr/lib/${ARCH}/librga.so
+  sudo mkdir -p ${CHROOT_DIR}/usr/local/include/rga
+  sudo cp BSP/librga/include/RgaApi.h BSP/librga/include/drmrga.h BSP/librga/include/rga.h \
+         BSP/librga/include/im2d.h BSP/librga/include/im2d_type.h BSP/librga/include/im2d_version.h \
+         BSP/librga/include/im2d_common.h BSP/librga/include/im2d_buffer.h \
+         BSP/librga/include/im2d_expand.h BSP/librga/include/im2d_single.h \
+         BSP/librga/include/RgaUtils.h BSP/librga/include/RockchipRga.h \
+         BSP/librga/include/RgaMutex.h BSP/librga/include/RgaSingleton.h \
+         BSP/librga/include/GrallocOps.h \
+         ${CHROOT_DIR}/usr/local/include/rga/
+else
+  # Build and install christianhaitian's librga (works for RK3326/RK3566)
+  sudo chroot ${CHROOT_DIR}/ bash -c "cd /home/ark &&
+    git clone https://github.com/christianhaitian/linux-rga.git &&
+    cd linux-rga &&
+    meson build && cd build &&
+    meson compile &&
+    cp -r librga.so* /usr/lib/${ARCH}/ &&
+    cd .. &&
+    mkdir -p /usr/local/include/rga &&
+    cp -f drmrga.h rga.h RgaApi.h RockchipRgaMacro.h /usr/local/include/rga/
+    "
+fi
 
 # Build and install libgo2
 sudo chroot ${CHROOT_DIR}/ bash -c "cd /home/ark &&

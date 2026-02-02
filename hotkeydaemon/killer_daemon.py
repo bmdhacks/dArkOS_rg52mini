@@ -38,6 +38,10 @@ JOY_MAPPINGS = {
     "GO-Advance Gamepad": {
         "f1": 704,
         "f3": 709
+    },
+    "rg56pro-joystick": {
+        "f1": 314,
+        "f3": 315
     }
 }
 
