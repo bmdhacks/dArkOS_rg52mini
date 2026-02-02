@@ -146,7 +146,8 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
 fi
 
 # Get libavcodec.so.58 from Debian security for PortMaster compatibility
-wget -t 3 -T 60 --no-check-certificate http://security.debian.org/debian-security/pool/updates/main/f/ffmpeg/libavcodec58_4.3.9-0+deb11u1_arm64.deb
+wget -t 3 -T 60 --no-check-certificate http://security.debian.org/debian-security/pool/updates/main/f/ffmpeg/libavcodec58_4.3.9-0+deb11u1_arm64.deb || \
+  wget -t 3 -T 60 --no-check-certificate https://snapshot.debian.org/archive/debian-security/20250714T110534Z/pool/updates/main/f/ffmpeg/libavcodec58_4.3.9-0+deb11u1_arm64.deb
 dpkg --fsys-tarfile libavcodec58_4.3.9-0+deb11u1_arm64.deb | tar -xO ./usr/lib/aarch64-linux-gnu/libavcodec.so.58.91.100 > libavcodec.so.58
 sudo mv -f libavcodec.so.58 Arkbuild/usr/lib/aarch64-linux-gnu/
 call_chroot "chown root:root /usr/lib/aarch64-linux-gnu/libavcodec.so.58"
@@ -193,6 +194,10 @@ sudo chmod 0440 Arkbuild/etc/sudoers.d/ark_preserve_sdl_video_egl_driver
 echo -e "Generating 20-usb-alsa.rules udev for usb dac support"
 echo -e "KERNEL==\"controlC[0-9]*\", DRIVERS==\"usb\", SYMLINK=\"snd/controlC7\"" | sudo tee Arkbuild/etc/udev/rules.d/20-usb-alsa.rules
 sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/checknswitchforusbdac.sh &\") | crontab -"
+
+# DMA heap permissions — Mali EGL needs access as non-root user
+echo -e "Generating 99-dma-heap.rules udev for Mali GPU access"
+echo 'SUBSYSTEM=="dma_heap", MODE="0666"' | sudo tee Arkbuild/etc/udev/rules.d/99-dma-heap.rules
 
 # Disable requirement for sudo for setting niceness
 echo "ark              -       nice            -20" | sudo tee -a Arkbuild/etc/security/limits.conf

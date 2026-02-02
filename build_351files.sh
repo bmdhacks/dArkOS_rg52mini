@@ -7,7 +7,7 @@ elif [ "$UNIT" == "rg351mp" ] || [ "$UNIT" == "g350" ] || [ "$UNIT" == "a10mini"
   BUILD_UNIT="RG351MP"
 elif [[ "$UNIT" == *"353"* ]] || [[ "$UNIT" == "rk2023" ]]; then
   BUILD_UNIT="RG353V"
-elif [[ "$UNIT" == "503" ]]; then
+elif [[ "$UNIT" == "503" ]] || [[ "$UNIT" == "rg56pro" ]]; then
   BUILD_UNIT="RG503"
 elif [[ "$UNIT" == "rgb30" ]]; then
   BUILD_UNIT="RGB30"

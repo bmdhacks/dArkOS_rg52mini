@@ -3,7 +3,13 @@
 # Build and install Dolphin standalone emulator
 if [ -f "Arkbuild_package_cache/${CHIPSET}/dolphinsa.tar.gz" ]; then
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/dolphinsa.tar.gz
-else
+    # Validate cache extraction produced the expected binary
+    if [ ! -f "Arkbuild/opt/dolphin/dolphin-emu-nogui" ]; then
+        echo "WARNING: Dolphin cache tarball is corrupt, rebuilding from source..."
+        sudo rm -f Arkbuild_package_cache/${CHIPSET}/dolphinsa.tar.gz
+    fi
+fi
+if [ ! -f "Arkbuild/opt/dolphin/dolphin-emu-nogui" ] && [ ! -f "Arkbuild_package_cache/${CHIPSET}/dolphinsa.tar.gz" ]; then
 	call_chroot "cd /home/ark &&
 	  cd ${CHIPSET}_core_builds &&
 	  chmod 777 builds-alt.sh &&
