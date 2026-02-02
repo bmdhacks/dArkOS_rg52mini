@@ -78,8 +78,9 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Get kernel version from the built Image
-KERNEL_VERSION=$(strings "${KERNEL_SRC_PATH}/arch/arm64/boot/Image" | grep -oP '^Linux version \K[^ ]+')
+# Get kernel version from the build system (not strings, which also matches
+# the "Linux version %s" format string in the kernel binary)
+KERNEL_VERSION=$(make -C "${KERNEL_SRC_PATH}" -s kernelrelease)
 echo "Built kernel version: ${KERNEL_VERSION}"
 
 # Build kernel modules

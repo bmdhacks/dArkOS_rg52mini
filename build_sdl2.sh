@@ -16,6 +16,21 @@ else
   CHROOT_DIR="Arkbuild"
 fi
 
+# For portrait-panel devices (e.g. rg56pro with 720x1280 DSI panel),
+# inject RGA rotation patches before building SDL2. These patches make
+# SDL2 create landscape GBM surfaces and use the Rockchip RGA hardware
+# to rotate each frame 270 degrees before scanout to the portrait panel.
+# Patches are renamed to avoid the "odroidgoa" skip logic in sdl2.sh.
+if [ "$UNIT" == "rg56pro" ]; then
+  echo "Injecting RGA screen rotation patches for portrait panel..."
+  # Ensure core_builds is cloned first so we can add patches
+  sudo chroot ${CHROOT_DIR}/ bash -c "source /root/.bashrc && cd /home/ark &&
+    if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds.git ${CHIPSET}_core_builds; fi
+    "
+  sudo cp sdl2-patch-0004-odroidgoa-kmsdrm.patch ${CHROOT_DIR}/home/ark/${CHIPSET}_core_builds/patches/sdl2-patch-0005-kmsdrm-rotation.patch
+  sudo cp sdl2-patch-0005-odroidgoa-rotate-cursor.patch ${CHROOT_DIR}/home/ark/${CHIPSET}_core_builds/patches/sdl2-patch-0006-rotate-cursor.patch
+fi
+
 # Build and install SDL2
 if [ "$ARCH" == "arm-linux-gnueabihf" ]; then
   sudo chroot ${CHROOT_DIR}/ bash -c "source /root/.bashrc && cd /home/ark &&

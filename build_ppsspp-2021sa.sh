@@ -3,7 +3,12 @@
 # Build and install PPSSPP standalone emulator
 if [ -f "Arkbuild_package_cache/${CHIPSET}/ppsspp-2021.tar.gz" ]; then
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/ppsspp-2021.tar.gz
-else
+    if [ ! -f "Arkbuild/opt/ppsspp-2021/PPSSPPSDL" ]; then
+        echo "WARNING: PPSSPP-2021 cache tarball is incomplete, rebuilding from source..."
+        sudo rm -f Arkbuild_package_cache/${CHIPSET}/ppsspp-2021.tar.gz
+    fi
+fi
+if [ ! -f "Arkbuild/opt/ppsspp-2021/PPSSPPSDL" ] && [ ! -f "Arkbuild_package_cache/${CHIPSET}/ppsspp-2021.tar.gz" ]; then
 	call_chroot "cd /home/ark &&
 	  cd ${CHIPSET}_core_builds &&
 	  chmod 777 builds-alt.sh &&

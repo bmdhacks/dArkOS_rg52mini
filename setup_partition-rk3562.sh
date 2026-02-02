@@ -28,7 +28,7 @@ fi
 
 # Image naming
 DISK="dArkOS_RG56Pro_${DEBIAN_CODE_NAME}_${BUILD_DATE}.img"
-IMAGE_SIZE=7.5G
+IMAGE_SIZE=12G
 SECTOR_SIZE=512
 BUILD_SIZE=52000     # Initial file system size in MB during build
 FILESYSTEM="ArkOS_File_System.img"
@@ -51,8 +51,8 @@ declare -a PARTS=(
   "uboot 16384 24575 $GUID_UBOOT"             # 4MB - U-Boot FIT
   "resource 24576 32767 $GUID_RESOURCE"       # 4MB - DTB resource (may be unused)
   "dArkOS_Fat 32768 235519 $GUID_BASIC_DATA"  # ~100MB - Boot partition
-  "rootfs 237568 15445614 $GUID_BASIC_DATA"   # ~7.3GB - Root filesystem
-  "5 15445615 15608046 $GUID_BASIC_DATA"      # ~79MB - ROMS partition (expands on first boot)
+  "rootfs 237568 24903679 $GUID_BASIC_DATA"   # ~11.8GB - Root filesystem
+  "5 24903680 25066111 $GUID_BASIC_DATA"      # ~79MB - ROMS partition (expands on first boot)
 )
 
 # Create partitions with sgdisk

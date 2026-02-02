@@ -13,9 +13,21 @@ if [ "${ROOT_FILESYSTEM_FORMAT}" == "xfs" ]; then
   sudo umount Arkbuild-final/
   sudo rm -rf Arkbuild-final/
 elif [[ "${ROOT_FILESYSTEM_FORMAT}" == *"ext"* ]]; then
-  e2fsck -p -f ${FILESYSTEM}
-  resize2fs -M ${FILESYSTEM}
-  sudo dd if="${FILESYSTEM}" of="${LOOP_DEV}p4" bs=512 conv=fsync,notrunc
+  # Unmount the rootfs — kill any processes holding it open first
+  sudo fuser -km Arkbuild/ 2>/dev/null || true
+  sudo umount -l Arkbuild/ 2>/dev/null || true
+  sleep 1
+  if mountpoint -q Arkbuild/ 2>/dev/null; then
+    echo "ERROR: Failed to unmount Arkbuild/. Cannot proceed."
+    exit 1
+  fi
+  sudo e2fsck -p -f ${FILESYSTEM}
+  sudo resize2fs -M ${FILESYSTEM}
+  sudo e2fsck -p -f ${FILESYSTEM}
+  sudo dd if="${FILESYSTEM}" of="${LOOP_DEV}p4" bs=4M conv=fsync,notrunc
+  # Expand filesystem to fill the partition
+  sudo e2fsck -p -f "${LOOP_DEV}p4"
+  sudo resize2fs "${LOOP_DEV}p4"
 elif [ "${ROOT_FILESYSTEM_FORMAT}" == "btrfs" ]; then
   sudo btrfs balance start --full-balance Arkbuild
   sync Arkbuild
