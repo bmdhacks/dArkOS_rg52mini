@@ -25,9 +25,10 @@ export PATH=/opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bi
 if [ "$CHIPSET" == "rk3326" ]; then
   export whichmali=libmali-bifrost-g31-rxp0-gbm.so
 elif [ "$CHIPSET" == "rk3562" ]; then
-  # RK3562 has Mali Bifrost G52 (same as RK3566). The BSP ships g24p0 but it has
-  # a broken GLES 1.0 glDrawArrays. Use g13p0 like RK3566 — proven stable.
-  export whichmali=libmali-bifrost-g52-g13p0-gbm.so
+  # RK3562 uses BSP g24p0 Mali for Vulkan support (GLES 2.0+/3.0 + Vulkan 1.3).
+  # EmulationStation gets g13p0 via LD_PRELOAD (g24p0 has broken GLES 1.0 glDrawArrays).
+  export whichmali=libmali.so.1.9.0
+  export whichmali_bsp=true
 else
   export whichmali=libmali-bifrost-g52-g13p0-gbm.so
 fi
@@ -119,23 +120,29 @@ function setup_arkbuild32() {
     sudo chroot Arkbuild/ bash -c "ln -sfv /usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.${extension} /usr/lib/arm-linux-gnueabihf/libSDL2.so"
     sudo cp -a Arkbuild32/home/ark/linux-rga/build/librga.so* Arkbuild/usr/lib/arm-linux-gnueabihf/
     sudo cp -a Arkbuild32/home/ark/libgo2/libgo2.so* Arkbuild/usr/lib/arm-linux-gnueabihf/
-    # Place libmali manually - check BSP first, then fall back to core_builds
+    # Place libmali manually for 32-bit chroot
+    # 32-bit always uses g13p0 from core_builds (no Vulkan needed, no 32-bit BSP blob)
     sudo mkdir -p Arkbuild32/usr/lib/arm-linux-gnueabihf/
+    if [ "${whichmali_bsp}" == "true" ]; then
+      MALI32=libmali-bifrost-g52-g13p0-gbm.so
+    else
+      MALI32=${whichmali}
+    fi
 
     # Check for Mali already installed (by build_deps.sh)
-    if [ -f "Arkbuild/usr/lib/arm-linux-gnueabihf/${whichmali}" ]; then
+    if [ -f "Arkbuild/usr/lib/arm-linux-gnueabihf/${MALI32}" ]; then
       echo "Copying Mali to Arkbuild32..."
-      sudo cp Arkbuild/usr/lib/arm-linux-gnueabihf/${whichmali} Arkbuild32/usr/lib/arm-linux-gnueabihf/
+      sudo cp Arkbuild/usr/lib/arm-linux-gnueabihf/${MALI32} Arkbuild32/usr/lib/arm-linux-gnueabihf/
       (
         cd Arkbuild32/usr/lib/arm-linux-gnueabihf
-        sudo ln -sf ${whichmali} libMali.so
+        sudo ln -sf ${MALI32} libMali.so
       )
     else
-      wget -t 3 -T 60 --no-check-certificate https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/raw/refs/heads/master/mali/armhf/${whichmali}
-      sudo mv ${whichmali} Arkbuild32/usr/lib/arm-linux-gnueabihf/.
+      wget -t 3 -T 60 --no-check-certificate https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/raw/refs/heads/master/mali/armhf/${MALI32}
+      sudo mv ${MALI32} Arkbuild32/usr/lib/arm-linux-gnueabihf/.
       (
         cd Arkbuild32/usr/lib/arm-linux-gnueabihf
-        sudo ln -sf ${whichmali} libMali.so
+        sudo ln -sf ${MALI32} libMali.so
       )
     fi
 

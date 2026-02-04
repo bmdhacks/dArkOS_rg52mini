@@ -1,3 +1,6 @@
 [submodule "kernel_rk3562"]
 	path = kernel_rk3562
 	url = git@github.com:bmdhacks/kernel_rk3562.git
+[submodule "rk3562_core_builds"]
+	path = rk3562_core_builds
+	url = git@github.com:bmdhacks/rk3566_core_builds.git

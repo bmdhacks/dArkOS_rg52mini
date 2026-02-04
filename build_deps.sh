@@ -64,8 +64,26 @@ do
   fi
   sudo mkdir -p Arkbuild/usr/lib/${ARCHITECTURE}/
 
-  # Check if Mali already installed (e.g. from build_kernel step)
-  if [ -f "Arkbuild/usr/lib/${ARCHITECTURE}/libmali.so.1" ]; then
+  # For BSP Mali (rk3562), 32-bit armhf still uses g13p0 from core_builds
+  if [ "${whichmali_bsp}" == "true" ] && [ "$FOLDER" == "armhf" ]; then
+    MALI_BLOB=libmali-bifrost-g52-g13p0-gbm.so
+  else
+    MALI_BLOB=${whichmali}
+  fi
+
+  # Install Mali blob
+  if [ "${whichmali_bsp}" == "true" ] && [ "$FOLDER" == "aarch64" ]; then
+    # RK3562 64-bit: extract g24p0 from BSP tarball (Vulkan 1.3 + GLES 2.0/3.0)
+    echo "Installing BSP Mali g24p0 (${whichmali}) from BSP/mali.tar.gz..."
+    tar xzf BSP/mali.tar.gz -C /tmp mali/${whichmali}
+    sudo cp /tmp/mali/${whichmali} Arkbuild/usr/lib/${ARCHITECTURE}/
+    rm -f /tmp/mali/${whichmali}
+    (
+      cd Arkbuild/usr/lib/${ARCHITECTURE}
+      sudo ln -sf ${whichmali} libMali.so
+    )
+  elif [ -f "Arkbuild/usr/lib/${ARCHITECTURE}/libmali.so.1" ]; then
+    # Check if Mali already installed (e.g. from build_kernel step)
     echo "Mali libraries already installed, creating symlinks..."
     (
       cd Arkbuild/usr/lib/${ARCHITECTURE}
@@ -73,18 +91,18 @@ do
     )
   else
     # Download Mali from core_builds repo (rk3566, rk3326, etc.)
-    wget -t 3 -T 60 --no-check-certificate https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/raw/refs/heads/master/mali/${FOLDER}/${whichmali}
-    sudo mv ${whichmali} Arkbuild/usr/lib/${ARCHITECTURE}/.
+    wget -t 3 -T 60 --no-check-certificate https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/raw/refs/heads/master/mali/${FOLDER}/${MALI_BLOB}
+    sudo mv ${MALI_BLOB} Arkbuild/usr/lib/${ARCHITECTURE}/.
     (
       cd Arkbuild/usr/lib/${ARCHITECTURE}
-      sudo ln -sf ${whichmali} libMali.so
+      sudo ln -sf ${MALI_BLOB} libMali.so
     )
   fi
 
-  # Create EGL/GLES/GBM symlinks - use subshell to preserve cwd
+  # Create EGL/GLES/GBM/Vulkan symlinks - use subshell to preserve cwd
   (
     cd Arkbuild/usr/lib/${ARCHITECTURE}
-    for LIB in libEGL.so libEGL.so.1 libEGL.so.1.1.0 libGLES_CM.so libGLES_CM.so.1 libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1.0 libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 libGLESv2.so.2.1.0 libGLESv3.so libGLESv3.so.3 libgbm.so libgbm.so.1 libgbm.so.1.0.0 libmali.so libmali.so.1 libMaliOpenCL.so libOpenCL.so libwayland-egl.so libwayland-egl.so.1 libwayland-egl.so.1.0.0
+    for LIB in libEGL.so libEGL.so.1 libEGL.so.1.1.0 libGLES_CM.so libGLES_CM.so.1 libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1.0 libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 libGLESv2.so.2.1.0 libGLESv3.so libGLESv3.so.3 libgbm.so libgbm.so.1 libgbm.so.1.0.0 libmali.so libmali.so.1 libMaliOpenCL.so libOpenCL.so libwayland-egl.so libwayland-egl.so.1 libwayland-egl.so.1.0.0 libvulkan.so libvulkan.so.1
     do
       sudo rm -fv ${LIB}
       sudo ln -sfv libMali.so ${LIB}
@@ -92,6 +110,16 @@ do
   )
 done
 sudo chroot Arkbuild/ ldconfig
+
+# Bundle g13p0 Mali for EmulationStation (rk3562 only)
+# g24p0 has broken GLES 1.0 glDrawArrays — ES uses GLES 1.0 for its loading screen.
+# ES gets g13p0 via LD_PRELOAD so the rest of the system can use g24p0 Vulkan.
+if [ "$CHIPSET" == "rk3562" ]; then
+  sudo mkdir -p Arkbuild/opt/emulationstation/lib
+  wget -t 3 -T 60 --no-check-certificate \
+    https://github.com/christianhaitian/rk3566_core_builds/raw/refs/heads/master/mali/aarch64/libmali-bifrost-g52-g13p0-gbm.so
+  sudo mv libmali-bifrost-g52-g13p0-gbm.so Arkbuild/opt/emulationstation/lib/libmali.so
+fi
 
 # Install meson
 sudo chroot ${CHROOT_DIR}/ bash -c "git clone https://github.com/mesonbuild/meson.git && ln -s /meson/meson.py /usr/bin/meson"
