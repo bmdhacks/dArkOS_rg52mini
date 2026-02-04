@@ -55,12 +55,14 @@ source ./setup_partition-rk3562.sh
 source ./bootstrap_rootfs-rk3562.sh
 source ./build_kernel-rk3562.sh
 
-# Pre-clone rk3566_core_builds as rk3562_core_builds (they're binary compatible)
+# Copy rk3562_core_builds submodule into chroot
+# This is the bmdhacks fork of rk3566_core_builds with Vulkan-enabled PPSSPP.
+# RK3562 and RK3566 are binary compatible — pre-built emulators work on both.
 if [[ "${CORE_BUILDS_SYMLINK_NEEDED}" == "y" ]]; then
-  echo "Cloning rk3566_core_builds as rk3562_core_builds..."
+  echo "Copying rk3562_core_builds into chroot..."
   sudo mkdir -p Arkbuild/home/ark
   if [ ! -d "Arkbuild/home/ark/rk3562_core_builds" ]; then
-    sudo git clone --depth=1 https://github.com/christianhaitian/rk3566_core_builds.git Arkbuild/home/ark/rk3562_core_builds
+    sudo cp -a rk3562_core_builds Arkbuild/home/ark/rk3562_core_builds
   fi
   sudo chown -R 1000:1000 Arkbuild/home/ark/rk3562_core_builds
 fi

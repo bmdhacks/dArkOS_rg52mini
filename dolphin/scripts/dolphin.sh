@@ -14,5 +14,5 @@ done
 
 export DOLPHIN_EMU_USERPATH="${HOME}/.local/share/dolphin-emu/"
 
-LD_PRELOAD=/opt/dolphin/lib/libmali.so /opt/dolphin/dolphin-emu-nogui -p drm -a HLE -e "${1}"
+/opt/dolphin/dolphin-emu-nogui -p drm -a HLE -e "${1}"
 
