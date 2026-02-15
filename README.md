@@ -1,6 +1,17 @@
-# <p align="center">Welcome to dArkOS</p>
+# <p align="center">Welcome to dArkOS (RK3562 Fork)</p>
 
-### <p align="center">Debian based version of the ArkOS operating system for select RK3326 and RK3566 based portable gaming devices.</p>
+### <p align="center">Fork of dArkOS adding support for AISLPC's RK3562-based handhelds: the RG52 Mini and RG43 Pro.</p>
+
+This is a fork of [christianhaitian's dArkOS](https://github.com/christianhaitian/dArkOS), a Debian-based gaming OS derived from [ArkOS](https://github.com/christianhaitian/arkos/wiki). The upstream project targets RK3326 and RK3566 devices. This fork adds support for [AISLPC](https://aislpc.com/)'s Rockchip RK3562-based handhelds:
+
+| Device | Screen | SoC | RAM |
+|--------|--------|-----|-----|
+| [RG52 Mini](https://aislpc.com/products/rg52mini-retro-handheld-game-console) | 5.5" IPS 1280x720 | RK3562 (4x Cortex-A53 @ 2.0GHz) | 2GB |
+| RG43 Pro | 4.3" IPS 1024x768 | RK3562 (4x Cortex-A53 @ 2.0GHz) | 1GB |
+
+Both devices use the Rockchip RK3562 SoC with a Mali Bifrost G52 GPU, and ship with EmuELEC as stock firmware. This fork replaces the stock OS with a full Debian Trixie userspace running EmulationStation-fcamod, RetroArch, and 50+ standalone emulators.
+
+---
 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?hosted_button_id=RC72LJ4SSERSU)
 
