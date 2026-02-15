@@ -226,21 +226,23 @@ index ebe15fe9c..74d673529 100644
          mode.refresh_rate = conn->modes[i].vrefresh;
          mode.format = SDL_PIXELFORMAT_ARGB8888;
          mode.driverdata = modedata;
-@@ -1386,6 +1431,13 @@ void KMSDRM_DestroyWindow(_THIS, SDL_Window *window)
+@@ -1386,6 +1431,15 @@ void KMSDRM_DestroyWindow(_THIS, SDL_Window *window)
      /*********************************************************************/
      SDL_free(window->driverdata);
      window->driverdata = NULL;
-+        for (int i = 0; i < RGA_BUFFERS_MAX; ++i) {
-+            close(viddata->rga_buffer_prime_fds[i]);
++        if (viddata->rga_buffers[0]) {
++            for (int i = 0; i < RGA_BUFFERS_MAX; ++i) {
++                close(viddata->rga_buffer_prime_fds[i]);
++            }
++            if (src_info.fd) {
++                close(src_info.fd);
++            }
++            c_RkRgaDeInit();
 +        }
-+        if (src_info.fd) {
-+            close(src_info.fd);
-+        }
-+        c_RkRgaDeInit();
  }
  
  /**********************************************************************/
-@@ -1404,6 +1456,7 @@ int KMSDRM_CreateWindow(_THIS, SDL_Window *window)
+@@ -1404,6 +1458,7 @@ int KMSDRM_CreateWindow(_THIS, SDL_Window *window)
      NativeDisplayType egl_display;
      drmModeModeInfo *mode;
      int ret = 0;
@@ -248,13 +250,15 @@ index ebe15fe9c..74d673529 100644
  
      /* Allocate window internal data */
      windata = (SDL_WindowData *)SDL_calloc(1, sizeof(SDL_WindowData));
-@@ -1519,6 +1572,9 @@ int KMSDRM_CreateWindow(_THIS, SDL_Window *window)
+@@ -1519,6 +1574,11 @@ int KMSDRM_CreateWindow(_THIS, SDL_Window *window)
      SDL_SetMouseFocus(window);
      SDL_SetKeyboardFocus(window);
  
 +        data = (SDL_DisplayData *) SDL_GetDisplayForWindow(window)->driverdata;
-+        KMSDRM_InitRotateBuffer(_this, data->mode.hdisplay, data->mode.vdisplay);
-+  
++        if (!(window->flags & SDL_WINDOW_VULKAN)) {
++            KMSDRM_InitRotateBuffer(_this, data->mode.hdisplay, data->mode.vdisplay);
++        }
++
      /* Tell the app that the window has moved to top-left. */
      SDL_SendWindowEvent(window, SDL_WINDOWEVENT_MOVED, 0, 0);
  

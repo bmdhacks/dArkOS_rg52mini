@@ -22,7 +22,8 @@
 # Kernel source tree lives alongside the dArkOS build directory
 KERNEL_SRC_PATH="${PWD}/kernel_rk3562"
 
-# Patched DTB source (with VOP2 plane-mask fix)
+# Patched DTB (VOP2 plane-mask + rockchip-suspend enabled). This is the single
+# source of truth for the device tree. Decompile with dtc to edit, recompile back.
 DTB_FILE="${PWD}/BSP/rk3562-rg56pro.dtb"
 
 echo "Building and installing kernel for RK3562..."
@@ -57,7 +58,7 @@ fi
 # Verify patched DTB exists
 if [ ! -f "${DTB_FILE}" ]; then
   echo "ERROR: Patched DTB not found at ${DTB_FILE}"
-  echo "Build it from rg56pro-patched.dts with: dtc -I dts -O dtb rg56pro-patched.dts -o rk3562-rg56pro.dtb"
+  echo "This compiled DTB is the source of truth. To edit: dtc -I dtb -O dts ${DTB_FILE} > /tmp/rg56pro.dts"
   exit 1
 fi
 
@@ -94,6 +95,10 @@ sudo mount ${LOOP_DEV}p3 ${mountpoint}
 echo "Copying kernel and DTB..."
 sudo cp "${KERNEL_SRC_PATH}/arch/arm64/boot/Image" ${mountpoint}/
 sudo cp "${DTB_FILE}" ${mountpoint}/${UNIT_DTB}.dtb
+
+# Copy battery charge animation BMPs for U-Boot charge display
+echo "Copying charge animation BMPs..."
+sudo cp ${BSP_PATH}/battery_*.bmp ${mountpoint}/ 2>/dev/null || true
 
 # Install kernel modules from source build
 echo "Installing kernel modules..."

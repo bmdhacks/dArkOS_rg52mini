@@ -1,7 +1,13 @@
 #!/bin/bash
 
 # Build and install Retroarch
-if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/retroarch.sh | grep -oP '(?<=tag=").*?(?=")')" ]; then
+# For rk3562, use local submodule (bmdhacks fork with rotation patch)
+if [ "$CHIPSET" == "rk3562" ]; then
+  RETROARCH_TAG=$(grep -oP '(?<=tag=").*?(?=")' rk3562_core_builds/scripts/retroarch.sh)
+else
+  RETROARCH_TAG=$(curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/retroarch.sh | grep -oP '(?<=tag=").*?(?=")')
+fi
+if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.commit)" == "${RETROARCH_TAG}" ]; then
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.tar.gz
 else
 	while true
@@ -31,8 +37,10 @@ else
 	sudo mkdir -p Arkbuild/home/ark/.config/retroarch/autoconfig/udev
 	if [ "$UNIT" == "rgb10" ] || [ "$UNIT" == "rk2020" ]; then
 	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch.${CHIPSET}.rot Arkbuild/opt/retroarch/bin/retroarch
+	elif [ "$UNIT" == "rg56pro" ]; then
+	  # RG56 Pro has a portrait panel — use the RGA-rotated binary (90° via patch 0000)
+	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch-rgarotated Arkbuild/opt/retroarch/bin/retroarch
 	elif [ "$CHIPSET" == "rk3566" ] || [ "$CHIPSET" == "rk3562" ]; then
-	  # rk3562 uses rk3566 binaries (same ARM64 arch, no rotation needed)
 	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch Arkbuild/opt/retroarch/bin/retroarch
 	else
 	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch.${CHIPSET}.unrot Arkbuild/opt/retroarch/bin/retroarch
@@ -48,7 +56,7 @@ else
 	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.commit
 	fi
 	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.tar.gz Arkbuild/opt/retroarch/bin/retroarch Arkbuild/home/ark/.config/retroarch/
-	sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/retroarch.sh | grep -oP '(?<=tag=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.commit
+	echo "${RETROARCH_TAG}" > Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.commit
 fi
 sudo rm -rf Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch/
 sudo cp retroarch/configs/retroarch.cfg.${UNIT} Arkbuild/home/ark/.config/retroarch/retroarch.cfg
@@ -200,7 +208,7 @@ else
 fi
 
 if [[ "${BUILD_ARMHF}" == "y" ]]; then
-	if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit)" == "$(curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/retroarch.sh | grep -oP '(?<=tag=").*?(?=")')" ]; then
+	if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit)" == "${RETROARCH_TAG}" ]; then
       sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz
 	else
 		setup_arkbuild32
@@ -231,8 +239,10 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
 		sudo mkdir -p Arkbuild/home/ark/.config/retroarch32/autoconfig/udev
 		if [ "$UNIT" == "rgb10" ] || [ "$UNIT" == "rk2020" ]; then
 		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32.${CHIPSET}.rot Arkbuild/opt/retroarch/bin/retroarch32
+		elif [ "$UNIT" == "rg56pro" ]; then
+		  # RG56 Pro has a portrait panel — use the RGA-rotated binary (90° via patch 0000)
+		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32-rgarotated Arkbuild/opt/retroarch/bin/retroarch32
 		elif [ "$CHIPSET" == "rk3566" ] || [ "$CHIPSET" == "rk3562" ]; then
-		  # rk3562 uses rk3566 binaries (same ARM64 arch, no rotation needed)
 		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32 Arkbuild/opt/retroarch/bin/retroarch32
 		else
 		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32.${CHIPSET}.unrot Arkbuild/opt/retroarch/bin/retroarch32
@@ -249,7 +259,7 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
 		fi
 		MALI_LIB="${whichmali}"
 		sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz Arkbuild/opt/retroarch/bin/retroarch32 Arkbuild/home/ark/.config/retroarch32/ Arkbuild/usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.${extension} Arkbuild/usr/lib/arm-linux-gnueabihf/librga.so* Arkbuild/usr/lib/arm-linux-gnueabihf/libgo2.so* Arkbuild/usr/lib/arm-linux-gnueabihf/${MALI_LIB} Arkbuild/usr/lib/arm-linux-gnueabihf/{libEGL.so,libEGL.so.1,libEGL.so.1.1.0,libGLES_CM.so,libGLES_CM.so.1,libGLESv1_CM.so,libGLESv1_CM.so.1,libGLESv1_CM.so.1.1.0,libGLESv2.so,libGLESv2.so.2,libGLESv2.so.2.0.0,libGLESv2.so.2.1.0,libGLESv3.so,libGLESv3.so.3,libgbm.so,libgbm.so.1,libgbm.so.1.0.0,libmali.so,libmali.so.1,libMaliOpenCL.so,libOpenCL.so,libwayland-egl.so,libwayland-egl.so.1,libwayland-egl.so.1.0.0,libMali.so}
-		sudo curl -s https://raw.githubusercontent.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/refs/heads/master/scripts/retroarch.sh | grep -oP '(?<=tag=").*?(?=")' > Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit
+		echo "${RETROARCH_TAG}" > Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit
 	fi
 	sudo cp retroarch32/configs/retroarch.cfg.${UNIT} Arkbuild/home/ark/.config/retroarch32/retroarch.cfg
 	sudo cp retroarch32/configs/retroarch.cfg.spectate Arkbuild/home/ark/.config/retroarch32/retroarch.cfg.spectate

@@ -15,7 +15,7 @@ cp /home/ark/.asoundrcbak /home/ark/.asoundrc
 sudo /usr/sbin/alsactl restore -f /var/local/asound.state 2>/dev/null
 
 # Set playback path to speaker
-amixer -q sset 'Playback Path' SPK 2>/dev/null
+amixer -q sset 'Playback Path' HP 2>/dev/null
 
 echo "Audio configuration reset for RK817 codec"
 sleep 2

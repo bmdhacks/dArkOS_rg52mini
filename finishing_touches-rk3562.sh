@@ -17,7 +17,7 @@ cat <<EOF | sudo tee ${mountpoint}/extlinux/extlinux.conf
 LABEL dArkOS
   LINUX /Image
   FDT /${UNIT_DTB}.dtb
-  APPEND root=/dev/mmcblk1p4 rootfstype=ext4 initrd=/uInitrd rootwait rw fsck.repair=yes quiet splash net.ifnames=0 console=ttyFIQ0,1500000 console=tty1 plymouth.ignore-serial-consoles consoleblank=0 loglevel=0 video=HDMI-A-1:1280x720@60 fbcon=rotate:3
+  APPEND root=/dev/mmcblk1p4 rootfstype=ext4 initrd=/uInitrd rootwait rw fsck.repair=yes quiet splash net.ifnames=0 console=ttyFIQ0,1500000 console=tty1 plymouth.ignore-serial-consoles consoleblank=0 loglevel=0 video=HDMI-A-1:1280x720@60 fbcon=rotate:1
 EOF
 
 # Copy optional files if present
@@ -172,6 +172,12 @@ sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/loca
 # DMA heap permissions — Mali EGL needs access as non-root user
 echo -e "Generating 99-dma-heap.rules udev for Mali GPU access"
 echo 'SUBSYSTEM=="dma_heap", MODE="0666"' | sudo tee Arkbuild/etc/udev/rules.d/99-dma-heap.rules
+
+# Vulkan ICD manifest + info utility
+sudo mkdir -p Arkbuild/usr/share/vulkan/icd.d
+sudo cp BSP/vulkan/rk_vk.json Arkbuild/usr/share/vulkan/icd.d/
+sudo cp BSP/vulkan/vulkaninfo Arkbuild/usr/bin/
+sudo chmod 755 Arkbuild/usr/bin/vulkaninfo
 
 # Disable requirement for sudo for setting niceness
 echo "ark              -       nice            -20" | sudo tee -a Arkbuild/etc/security/limits.conf

@@ -134,7 +134,7 @@ else
     esdir="$(dirname $0)"
     while true; do
         rm -f /tmp/es-restart /tmp/es-sysrestart /tmp/es-shutdown
-        LD_PRELOAD=/opt/emulationstation/lib/libmali.so "$esdir/emulationstation" "$@"
+        LD_LIBRARY_PATH=/opt/emulationstation/lib "$esdir/emulationstation" "$@"
         ret=$?
         [ -f /tmp/es-restart ] && continue
         if [ -f /tmp/es-sysrestart ]; then

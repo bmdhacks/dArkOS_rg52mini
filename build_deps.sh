@@ -73,7 +73,7 @@ do
 
   # Install Mali blob
   if [ "${whichmali_bsp}" == "true" ] && [ "$FOLDER" == "aarch64" ]; then
-    # RK3562 64-bit: extract g24p0 from BSP tarball (Vulkan 1.3 + GLES 2.0/3.0)
+    # RK3562 64-bit: extract g24p0 from BSP tarball (GLES + Vulkan 1.3)
     echo "Installing BSP Mali g24p0 (${whichmali}) from BSP/mali.tar.gz..."
     tar xzf BSP/mali.tar.gz -C /tmp mali/${whichmali}
     sudo cp /tmp/mali/${whichmali} Arkbuild/usr/lib/${ARCHITECTURE}/
@@ -99,10 +99,10 @@ do
     )
   fi
 
-  # Create EGL/GLES/GBM/Vulkan symlinks - use subshell to preserve cwd
+  # Create EGL/GLES/GBM symlinks - use subshell to preserve cwd
   (
     cd Arkbuild/usr/lib/${ARCHITECTURE}
-    for LIB in libEGL.so libEGL.so.1 libEGL.so.1.1.0 libGLES_CM.so libGLES_CM.so.1 libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1.0 libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 libGLESv2.so.2.1.0 libGLESv3.so libGLESv3.so.3 libgbm.so libgbm.so.1 libgbm.so.1.0.0 libmali.so libmali.so.1 libMaliOpenCL.so libOpenCL.so libwayland-egl.so libwayland-egl.so.1 libwayland-egl.so.1.0.0 libvulkan.so libvulkan.so.1
+    for LIB in libEGL.so libEGL.so.1 libEGL.so.1.1.0 libGLES_CM.so libGLES_CM.so.1 libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1.0 libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 libGLESv2.so.2.1.0 libGLESv3.so libGLESv3.so.3 libgbm.so libgbm.so.1 libgbm.so.1.0.0 libmali.so libmali.so.1 libMaliOpenCL.so libOpenCL.so libwayland-egl.so libwayland-egl.so.1 libwayland-egl.so.1.0.0
     do
       sudo rm -fv ${LIB}
       sudo ln -sfv libMali.so ${LIB}
@@ -113,12 +113,34 @@ sudo chroot Arkbuild/ ldconfig
 
 # Bundle g13p0 Mali for EmulationStation (rk3562 only)
 # g24p0 has broken GLES 1.0 glDrawArrays — ES uses GLES 1.0 for its loading screen.
-# ES gets g13p0 via LD_PRELOAD so the rest of the system can use g24p0 Vulkan.
+# ES gets g13p0 via LD_LIBRARY_PATH (g24p0 has broken GLES 1.0 glDrawArrays).
 if [ "$CHIPSET" == "rk3562" ]; then
   sudo mkdir -p Arkbuild/opt/emulationstation/lib
   wget -t 3 -T 60 --no-check-certificate \
-    https://github.com/christianhaitian/rk3566_core_builds/raw/refs/heads/master/mali/aarch64/libmali-bifrost-g52-g13p0-gbm.so
+    https://github.com/christianhaitian/rk3566_core_builds/raw/refs/heads/master/mali/aarch64/libmali-bifrost-g52-g13p0-gbm.so \
+    || { echo "FATAL: Failed to download g13p0 Mali for ES"; exit 1; }
   sudo mv libmali-bifrost-g52-g13p0-gbm.so Arkbuild/opt/emulationstation/lib/libmali.so
+  # Create symlinks for all Mali-provided libraries so LD_LIBRARY_PATH works
+  (
+    cd Arkbuild/opt/emulationstation/lib
+    for LIB in libEGL.so libEGL.so.1 libGLES_CM.so libGLES_CM.so.1 \
+               libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv2.so libGLESv2.so.2 \
+               libgbm.so libgbm.so.1 libmali.so.1; do
+      sudo ln -sf libmali.so ${LIB}
+    done
+  )
+fi
+
+# Install proprietary Rockchip Vulkan loader (rk3562 only)
+# No system vulkan-headers needed — PPSSPP bundles its own in ext/vulkan/.
+# The proprietary loader must be installed before PPSSPP builds so cmake can find it.
+if [ "$CHIPSET" == "rk3562" ]; then
+  sudo cp BSP/vulkan/libvulkan.so.1.3.274 Arkbuild/usr/lib/aarch64-linux-gnu/
+  (
+    cd Arkbuild/usr/lib/aarch64-linux-gnu
+    sudo ln -sf libvulkan.so.1.3.274 libvulkan.so.1
+    sudo ln -sf libvulkan.so.1 libvulkan.so
+  )
 fi
 
 # Install meson
@@ -139,7 +161,7 @@ if [ "$CHIPSET" == "rk3562" ] && [ "$BIT" == "64" ]; then
          BSP/librga/include/im2d_expand.h BSP/librga/include/im2d_single.h \
          BSP/librga/include/RgaUtils.h BSP/librga/include/RockchipRga.h \
          BSP/librga/include/RgaMutex.h BSP/librga/include/RgaSingleton.h \
-         BSP/librga/include/GrallocOps.h \
+         BSP/librga/include/GrallocOps.h BSP/librga/include/RockchipRgaMacro.h \
          ${CHROOT_DIR}/usr/local/include/rga/
 else
   # Build and install christianhaitian's librga (works for RK3326/RK3566)

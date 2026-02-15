@@ -2,7 +2,7 @@ state.rockchiprk817 {
 	control.1 {
 		iface MIXER
 		name 'Playback Path'
-		value SPK
+		value HP
 		comment {
 			access 'read write'
 			type ENUMERATED

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build and install PPSSPP standalone emulator
-# For rk3562, the core_builds repo is a local submodule (bmdhacks fork with Vulkan)
+# For rk3562, the core_builds repo is a local submodule (bmdhacks fork)
 if [ "$CHIPSET" == "rk3562" ]; then
   PPSSPP_TAG=$(grep -oP '(?<=TAG=").*?(?=")' rk3562_core_builds/scripts/ppsspp.sh)
 else
@@ -10,6 +10,11 @@ fi
 if [ -f "Arkbuild_package_cache/${CHIPSET}/ppsspp.tar.gz" ] && [ "$(cat Arkbuild_package_cache/${CHIPSET}/ppsspp.commit)" == "${PPSSPP_TAG}" ]; then
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/ppsspp.tar.gz
 else
+	# Remove libvulkan-dev dependency for rk3562 to avoid pulling in Mesa's loader
+	# (we use Rockchip's proprietary Vulkan loader; PPSSPP bundles its own headers)
+	if [ "$CHIPSET" == "rk3562" ]; then
+	  sed -i 's/ libvulkan-dev//' Arkbuild/home/ark/${CHIPSET}_core_builds/scripts/ppsspp.sh
+	fi
 	call_chroot "cd /home/ark &&
 	  cd ${CHIPSET}_core_builds &&
 	  chmod 777 builds-alt.sh &&

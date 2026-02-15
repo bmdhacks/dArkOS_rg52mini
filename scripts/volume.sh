@@ -10,6 +10,13 @@ else
   value="${1}"
 fi
 
+# Convert 1+/1- to 5%+/5%- for reliable softvol control
+if [[ "${value}" == "1+" ]]; then
+  value="5%+"
+elif [[ "${value}" == "1-" ]]; then
+  value="5%-"
+fi
+
 if test ! -z "$(cat /home/ark/.asoundrc | grep softvol)"
 then
   amixer -q sset Master ${value}
