@@ -56,7 +56,7 @@ source ./bootstrap_rootfs-rk3562.sh
 source ./build_kernel-rk3562.sh
 
 # Copy rk3562_core_builds submodule into chroot
-# This is the bmdhacks fork of rk3566_core_builds with Vulkan-enabled PPSSPP.
+# This is the bmdhacks fork of rk3566_core_builds.
 # RK3562 and RK3566 are binary compatible — pre-built emulators work on both.
 if [[ "${CORE_BUILDS_SYMLINK_NEEDED}" == "y" ]]; then
   echo "Copying rk3562_core_builds into chroot..."

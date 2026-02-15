@@ -25,8 +25,8 @@ export PATH=/opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bi
 if [ "$CHIPSET" == "rk3326" ]; then
   export whichmali=libmali-bifrost-g31-rxp0-gbm.so
 elif [ "$CHIPSET" == "rk3562" ]; then
-  # RK3562 uses BSP g24p0 Mali for Vulkan support (GLES 2.0+/3.0 + Vulkan 1.3).
-  # EmulationStation gets g13p0 via LD_PRELOAD (g24p0 has broken GLES 1.0 glDrawArrays).
+  # RK3562 uses BSP g24p0 Mali (GLES + Vulkan 1.3). ES gets g13p0 via LD_LIBRARY_PATH
+  # because g24p0 has broken GLES 1.0 glDrawArrays (crashes ES loading screen).
   export whichmali=libmali.so.1.9.0
   export whichmali_bsp=true
 else
@@ -121,7 +121,7 @@ function setup_arkbuild32() {
     sudo cp -a Arkbuild32/home/ark/linux-rga/build/librga.so* Arkbuild/usr/lib/arm-linux-gnueabihf/
     sudo cp -a Arkbuild32/home/ark/libgo2/libgo2.so* Arkbuild/usr/lib/arm-linux-gnueabihf/
     # Place libmali manually for 32-bit chroot
-    # 32-bit always uses g13p0 from core_builds (no Vulkan needed, no 32-bit BSP blob)
+    # 32-bit always uses g13p0 from core_builds (no 32-bit BSP blob)
     sudo mkdir -p Arkbuild32/usr/lib/arm-linux-gnueabihf/
     if [ "${whichmali_bsp}" == "true" ]; then
       MALI32=libmali-bifrost-g52-g13p0-gbm.so

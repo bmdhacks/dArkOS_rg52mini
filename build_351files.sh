@@ -7,17 +7,25 @@ elif [ "$UNIT" == "rg351mp" ] || [ "$UNIT" == "g350" ] || [ "$UNIT" == "a10mini"
   BUILD_UNIT="RG351MP"
 elif [[ "$UNIT" == *"353"* ]] || [[ "$UNIT" == "rk2023" ]]; then
   BUILD_UNIT="RG353V"
-elif [[ "$UNIT" == "503" ]] || [[ "$UNIT" == "rg56pro" ]]; then
+elif [[ "$UNIT" == "503" ]]; then
   BUILD_UNIT="RG503"
+elif [[ "$UNIT" == "rg56pro" ]]; then
+  BUILD_UNIT="RG56PRO"
 elif [[ "$UNIT" == "rgb30" ]]; then
   BUILD_UNIT="RGB30"
 elif [[ "$UNIT" == "rgb20pro" ]]; then
   BUILD_UNIT="RGB20PRO"
 fi
 
+# Copy RG56PRO patch script into chroot if needed
+if [ "$BUILD_UNIT" == "RG56PRO" ]; then
+  sudo cp patch_351files_rg56pro.py Arkbuild/home/ark/
+fi
+
 call_chroot "cd /home/ark &&
   git clone --recursive https://github.com/christianhaitian/351Files.git &&
   cd 351Files &&
+  if [ -f /home/ark/patch_351files_rg56pro.py ]; then python3 /home/ark/patch_351files_rg56pro.py; fi &&
   ./build_RG351.sh ${BUILD_UNIT} ArkOS /roms ./res &&
   strip 351Files*
   "
