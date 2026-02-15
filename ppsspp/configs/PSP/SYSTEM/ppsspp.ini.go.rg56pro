@@ -56,7 +56,7 @@ JitDisableFlags = 0x00000000
 CPUSpeed = 0
 [Graphics]
 ShowFPSCounter = 0
-GraphicsBackend = 1 (OPENGL)
+GraphicsBackend = 3
 FailedGraphicsBackends = 
 DisabledGraphicsBackends = 
 VulkanDevice = 
