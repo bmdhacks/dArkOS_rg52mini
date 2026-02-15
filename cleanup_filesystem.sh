@@ -6,6 +6,8 @@ call_chroot "rm -rf /home/ark/EmulationStation-fcamod"
 call_chroot "rm -rf /home/ark/libgo2"
 call_chroot "rm -rf /home/ark/linux-rga"
 call_chroot "rm -rf /home/ark/${CHIPSET}_core_builds"
+# Remove SDL 1.2 headers installed to /usr/local by sdl12-compat (linapplesa build)
+sudo rm -rf Arkbuild/usr/local/include/SDL/
 call_chroot "apt remove -y autotools-dev \
   build-essential \
   ccache \
@@ -166,7 +168,9 @@ if [ "$CHIPSET" == "rk3562" ]; then
   sudo ln -sf libvulkan.so.1.3.274 libvulkan.so.1
   sudo ln -sf libvulkan.so.1 libvulkan.so
   cd ../../../../
-  # Remove any Mesa ICD manifests (only rk_vk.json should remain)
+  # Remove Mesa ICD manifests so Mesa Vulkan driver isn't found by the loader
+  # (only rk_vk.json should remain, pointing to Mali).
+  # Mesa packages stay installed to satisfy ffmpeg dependency chain.
   sudo rm -f Arkbuild/usr/share/vulkan/icd.d/*_icd.json
 fi
 
