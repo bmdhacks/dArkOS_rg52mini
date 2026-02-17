@@ -88,6 +88,13 @@ rk2023:
 	@sleep 5
 	./build_rk2023.sh
 
+rg43h:
+	$(info dArkOS will be built using the $(DEBIAN_CODE_NAME) release of Debian.)
+	$(info debian building caching enabled? ${ENABLE_CACHE})
+	$(info adding armhf 32bit userspace? ${BUILD_ARMHF})
+	@sleep 5
+	./build_rg43h.sh
+
 rg56pro:
 	$(info dArkOS will be built using the $(DEBIAN_CODE_NAME) release of Debian.)
 	$(info debian building caching enabled? ${ENABLE_CACHE})

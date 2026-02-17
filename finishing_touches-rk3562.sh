@@ -13,11 +13,18 @@
 
 # Create extlinux.conf for boot
 sudo mkdir -p ${mountpoint}/extlinux
+# Build kernel command line — portrait-panel devices need fbcon rotation
+KCMD_BASE="root=/dev/mmcblk1p4 rootfstype=ext4 initrd=/uInitrd rootwait rw fsck.repair=yes quiet splash net.ifnames=0 console=ttyFIQ0,1500000 console=tty1 plymouth.ignore-serial-consoles consoleblank=0 loglevel=0"
+if [ "$UNIT" == "rg56pro" ]; then
+  KCMD_VIDEO="video=HDMI-A-1:1280x720@60 fbcon=rotate:1"
+else
+  KCMD_VIDEO=""
+fi
 cat <<EOF | sudo tee ${mountpoint}/extlinux/extlinux.conf
 LABEL dArkOS
   LINUX /Image
   FDT /${UNIT_DTB}.dtb
-  APPEND root=/dev/mmcblk1p4 rootfstype=ext4 initrd=/uInitrd rootwait rw fsck.repair=yes quiet splash net.ifnames=0 console=ttyFIQ0,1500000 console=tty1 plymouth.ignore-serial-consoles consoleblank=0 loglevel=0 video=HDMI-A-1:1280x720@60 fbcon=rotate:1
+  APPEND ${KCMD_BASE} ${KCMD_VIDEO}
 EOF
 
 # Copy optional files if present
@@ -35,7 +42,7 @@ echo "export PATH=\"\$PATH:/usr/sbin\"" | sudo tee -a Arkbuild/home/ark/.bashrc
 sudo chroot Arkbuild/ bash -c "chown ark:ark /home/ark/.bashrc"
 
 # Set the hostname
-NAME="rg56pro"
+NAME="${UNIT}"
 echo "$NAME" | sudo tee Arkbuild/etc/hostname
 echo -e "# This host address\n127.0.1.1\t${NAME}" | sudo tee -a Arkbuild/etc/hosts
 
@@ -79,12 +86,17 @@ sudo cp amiga/amiga.sh Arkbuild/usr/local/bin/
 if [ "$ROOT_FILESYSTEM_FORMAT" == "btrfs" ]; then
   ROOT_FILESYSTEM_MOUNT_OPTIONS="${ROOT_FILESYSTEM_MOUNT_OPTIONS},ssd_spread"
 fi
+SWAP_LINE=""
+if [ "$UNIT" == "rg43h" ]; then
+  SWAP_LINE="
+PARTLABEL=swap none swap sw,pri=10 0 0"
+fi
 cat <<EOF | sudo tee ${mountpoint}/fstab.exfat
 /dev/mmcblk1p4  /  ${ROOT_FILESYSTEM_FORMAT} ${ROOT_FILESYSTEM_MOUNT_OPTIONS} 0 0
 
 /dev/mmcblk1p3 /boot vfat defaults,noatime 0 0
 /dev/mmcblk1p5 /roms exfat defaults,auto,umask=000,uid=1000,gid=1000,noatime 0 0
-/roms/tools /opt/system/Tools none nofail,x-systemd.device-timeout=7,bind
+/roms/tools /opt/system/Tools none nofail,x-systemd.device-timeout=7,bind${SWAP_LINE}
 EOF
 
 # Disable getty on tty0 and tty1
@@ -101,6 +113,11 @@ sudo cp -f scripts/00-header Arkbuild/etc/update-motd.d/00-header
 sudo cp -f scripts/10-help-text Arkbuild/etc/update-motd.d/10-help-text
 sudo rm -f Arkbuild/etc/motd
 sudo chmod 777 Arkbuild/etc/update-motd.d/*
+
+# RG43H Pro: low swappiness for eMMC swap (only swap under real memory pressure)
+if [ "$UNIT" == "rg43h" ]; then
+  echo "vm.swappiness=10" | sudo tee Arkbuild/etc/sysctl.d/99-swap.conf
+fi
 
 # Load rk915 WiFi kernel module at boot
 # The rk915 driver uses a platform alias (platform:rk915) and won't auto-load

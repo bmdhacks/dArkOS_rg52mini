@@ -2,7 +2,7 @@
 """Measure joystick ADC noise at rest to determine proper dead zone and fuzz values.
 
 Usage:
-    # Auto-detect rg56pro-joystick device, sample for 5 seconds:
+    # Auto-detect rk3562-joystick device, sample for 5 seconds:
     python3 measure_noise.py
 
     # Specify device and duration:
@@ -29,11 +29,11 @@ ABS_NAMES = {
 EV_ABS = 0x03
 
 def find_device():
-    """Find the rg56pro-joystick event device."""
+    """Find the rk3562-joystick event device."""
     for path in sorted(glob.glob("/sys/class/input/event*/device/name")):
         try:
             with open(path) as f:
-                if "rg56pro" in f.read():
+                if "rk3562" in f.read():
                     num = re.search(r"event(\d+)", path).group(1)
                     return f"/dev/input/event{num}"
         except (IOError, AttributeError):
@@ -220,7 +220,7 @@ def main():
         if dev is None:
             dev = find_device()
             if dev is None:
-                print("Could not find rg56pro-joystick device.")
+                print("Could not find rk3562-joystick device.")
                 print("Usage: python3 measure_noise.py /dev/input/eventN [seconds]")
                 sys.exit(1)
 

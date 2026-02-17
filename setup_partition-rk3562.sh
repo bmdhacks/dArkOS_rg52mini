@@ -27,7 +27,7 @@ elif [[ "$ROOT_FILESYSTEM_FORMAT" == *"ext"* ]]; then
 fi
 
 # Image naming
-DISK="dArkOS_RG56Pro_${DEBIAN_CODE_NAME}_${BUILD_DATE}.img"
+DISK="dArkOS_${UNIT}_${DEBIAN_CODE_NAME}_${BUILD_DATE}.img"
 IMAGE_SIZE=12G
 SECTOR_SIZE=512
 BUILD_SIZE=52000     # Initial file system size in MB during build
