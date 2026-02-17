@@ -11,6 +11,8 @@ elif [[ "$UNIT" == "503" ]]; then
   BUILD_UNIT="RG503"
 elif [[ "$UNIT" == "rg56pro" ]]; then
   BUILD_UNIT="RG56PRO"
+elif [[ "$UNIT" == "rg43h" ]]; then
+  BUILD_UNIT="RG43H"
 elif [[ "$UNIT" == "rgb30" ]]; then
   BUILD_UNIT="RGB30"
 elif [[ "$UNIT" == "rgb20pro" ]]; then

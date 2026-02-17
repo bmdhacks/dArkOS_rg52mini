@@ -24,7 +24,7 @@ KERNEL_SRC_PATH="${PWD}/kernel_rk3562"
 
 # Patched DTB (VOP2 plane-mask + rockchip-suspend enabled). This is the single
 # source of truth for the device tree. Decompile with dtc to edit, recompile back.
-DTB_FILE="${PWD}/BSP/rk3562-rg56pro.dtb"
+DTB_FILE="${PWD}/BSP/${UNIT_DTB}.dtb"
 
 echo "Building and installing kernel for RK3562..."
 
@@ -64,8 +64,8 @@ fi
 
 # Ensure kernel .config exists
 if [ ! -f "${KERNEL_SRC_PATH}/.config" ]; then
-  echo "Generating kernel .config from rg56pro_defconfig..."
-  make -C "${KERNEL_SRC_PATH}" rg56pro_defconfig
+  echo "Generating kernel .config from ${UNIT}_defconfig..."
+  make -C "${KERNEL_SRC_PATH}" ${UNIT}_defconfig
 fi
 
 # Build kernel Image

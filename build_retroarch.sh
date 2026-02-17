@@ -17,6 +17,11 @@ else
 	    echo "Injecting dArkOS RetroArch patches..."
 	    sudo cp retroarch-patches/retroarch-patch-* Arkbuild/home/ark/${CHIPSET}_core_builds/patches/
 	  fi
+	  # Remove rotation patches for landscape-native devices
+	  if [ "$CHIPSET" == "rk3562" ] && [ "$UNIT" != "rg56pro" ]; then
+	    rm -f Arkbuild/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0000-rk3562-rotation-90.patch
+	    rm -f Arkbuild/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0008-norotation-rga.patch
+	  fi
 	  call_chroot "cd /home/ark &&
 		cd ${CHIPSET}_core_builds &&
 		chmod 777 builds-alt.sh &&
@@ -219,6 +224,11 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
 		  if ls retroarch-patches/retroarch-patch-* 1>/dev/null 2>&1; then
 		    echo "Injecting dArkOS RetroArch patches (32-bit)..."
 		    sudo cp retroarch-patches/retroarch-patch-* Arkbuild32/home/ark/${CHIPSET}_core_builds/patches/
+		  fi
+		  # Remove rotation patches for landscape-native devices (32-bit)
+		  if [ "$CHIPSET" == "rk3562" ] && [ "$UNIT" != "rg56pro" ]; then
+		    rm -f Arkbuild32/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0000-rk3562-rotation-90.patch
+		    rm -f Arkbuild32/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0008-norotation-rga.patch
 		  fi
 		  call_chroot32 "cd /home/ark &&
 			if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds.git ${CHIPSET}_core_builds; fi &&
