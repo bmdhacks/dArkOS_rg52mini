@@ -267,7 +267,12 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
 		if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit" ]; then
 	      sudo rm -f Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit
 		fi
-		MALI_LIB="${whichmali}"
+		if [ "${whichmali_bsp}" == "true" ]; then
+		  # BSP Mali: 64-bit uses $whichmali, 32-bit armhf uses g13p0 from core_builds
+		  MALI_LIB="libmali-bifrost-g52-g13p0-gbm.so"
+		else
+		  MALI_LIB="${whichmali}"
+		fi
 		sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.tar.gz Arkbuild/opt/retroarch/bin/retroarch32 Arkbuild/home/ark/.config/retroarch32/ Arkbuild/usr/lib/arm-linux-gnueabihf/libSDL2-2.0.so.0.${extension} Arkbuild/usr/lib/arm-linux-gnueabihf/librga.so* Arkbuild/usr/lib/arm-linux-gnueabihf/libgo2.so* Arkbuild/usr/lib/arm-linux-gnueabihf/${MALI_LIB} Arkbuild/usr/lib/arm-linux-gnueabihf/{libEGL.so,libEGL.so.1,libEGL.so.1.1.0,libGLES_CM.so,libGLES_CM.so.1,libGLESv1_CM.so,libGLESv1_CM.so.1,libGLESv1_CM.so.1.1.0,libGLESv2.so,libGLESv2.so.2,libGLESv2.so.2.0.0,libGLESv2.so.2.1.0,libGLESv3.so,libGLESv3.so.3,libgbm.so,libgbm.so.1,libgbm.so.1.0.0,libmali.so,libmali.so.1,libMaliOpenCL.so,libOpenCL.so,libwayland-egl.so,libwayland-egl.so.1,libwayland-egl.so.1.0.0,libMali.so}
 		echo "${RETROARCH_TAG}" > Arkbuild_package_cache/${CHIPSET}/retroarch32_${UNIT}.commit
 	fi

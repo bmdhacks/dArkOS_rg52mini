@@ -147,11 +147,15 @@ fi
 sudo chroot ${CHROOT_DIR}/ bash -c "git clone https://github.com/mesonbuild/meson.git && ln -s /meson/meson.py /usr/bin/meson"
 
 # Install librga
-if [ "$CHIPSET" == "rk3562" ] && [ "$BIT" == "64" ]; then
-  # RK3562 64-bit uses BSP librga (matches RGA3 kernel driver ABI).
+if [ "$CHIPSET" == "rk3562" ]; then
+  # RK3562 uses BSP librga (matches RGA3 kernel driver ABI) for both 32 and 64-bit.
   # The christianhaitian/linux-rga build has struct layout mismatches with the RGA3
   # kernel framework, causing "Cannot get src1 channel buffer" errors.
-  sudo cp BSP/librga/librga.so.2.1.0 ${CHROOT_DIR}/usr/lib/${ARCH}/
+  if [ "$BIT" == "64" ]; then
+    sudo cp BSP/librga/librga.so.2.1.0 ${CHROOT_DIR}/usr/lib/${ARCH}/
+  else
+    sudo cp BSP/librga32/librga.so.2.1.0 ${CHROOT_DIR}/usr/lib/${ARCH}/
+  fi
   sudo ln -sf librga.so.2.1.0 ${CHROOT_DIR}/usr/lib/${ARCH}/librga.so.2
   sudo ln -sf librga.so.2 ${CHROOT_DIR}/usr/lib/${ARCH}/librga.so
   sudo mkdir -p ${CHROOT_DIR}/usr/local/include/rga

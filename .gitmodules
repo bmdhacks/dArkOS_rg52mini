@@ -4,3 +4,6 @@
 [submodule "rk3562_core_builds"]
 	path = rk3562_core_builds
 	url = git@github.com:bmdhacks/rk3566_core_builds.git
+[submodule "bootloader"]
+	path = bootloader
+	url = git@github.com:bmdhacks/aislpc-bootloader-tool.git
