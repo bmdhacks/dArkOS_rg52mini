@@ -12,6 +12,9 @@ if [ -f "Arkbuild_package_cache/${CHIPSET}/retroarch_${UNIT}.tar.gz" ] && [ "$(c
 else
 	while true
 	do
+	  # Restore core_builds patches to pristine state before device-specific modifications.
+	  # Prevents cross-contamination when building multiple devices sequentially.
+	  sudo git -C Arkbuild/home/ark/${CHIPSET}_core_builds checkout -- patches/ 2>/dev/null || true
 	  # Copy dArkOS-specific RetroArch patches into core_builds patches dir
 	  if ls retroarch-patches/retroarch-patch-* 1>/dev/null 2>&1; then
 	    echo "Injecting dArkOS RetroArch patches..."
@@ -19,8 +22,8 @@ else
 	  fi
 	  # Remove rotation patches for landscape-native devices
 	  if [ "$CHIPSET" == "rk3562" ] && [ "$UNIT" != "rg56pro" ]; then
-	    rm -f Arkbuild/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0000-rk3562-rotation-90.patch
-	    rm -f Arkbuild/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0008-norotation-rga.patch
+	    sudo rm -f Arkbuild/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0000-rk3562-rotation-90.patch
+	    sudo rm -f Arkbuild/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0008-norotation-rga.patch
 	  fi
 	  call_chroot "cd /home/ark &&
 		cd ${CHIPSET}_core_builds &&
@@ -42,10 +45,12 @@ else
 	sudo mkdir -p Arkbuild/home/ark/.config/retroarch/autoconfig/udev
 	if [ "$UNIT" == "rgb10" ] || [ "$UNIT" == "rk2020" ]; then
 	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch.${CHIPSET}.rot Arkbuild/opt/retroarch/bin/retroarch
-	elif [ "$UNIT" == "rg56pro" ]; then
-	  # RG56 Pro has a portrait panel — use the RGA-rotated binary (90° via patch 0000)
+	elif [ "$CHIPSET" == "rk3562" ]; then
+	  # RK3562: always use retroarch-rgarotated (the first binary produced by builds-alt.sh).
+	  # On rg56pro it has rotation patches applied; on landscape devices (rg43h) the rotation
+	  # patches are removed so it's a normal unrotated build despite the misleading name.
 	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch-rgarotated Arkbuild/opt/retroarch/bin/retroarch
-	elif [ "$CHIPSET" == "rk3566" ] || [ "$CHIPSET" == "rk3562" ]; then
+	elif [ "$CHIPSET" == "rk3566" ]; then
 	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch Arkbuild/opt/retroarch/bin/retroarch
 	else
 	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch.${CHIPSET}.unrot Arkbuild/opt/retroarch/bin/retroarch
@@ -220,6 +225,15 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
 		sudo chroot Arkbuild32/ mkdir -p /home/ark
 		while true
 		do
+		  # Restore core_builds patches to pristine state before device-specific modifications.
+		  # Prevents cross-contamination when building multiple devices with shared Arkbuild32.
+		  sudo git -C Arkbuild32/home/ark/${CHIPSET}_core_builds checkout -- patches/ 2>/dev/null || true
+		  # For rk3562: the 32-bit chroot's core_builds was cloned from upstream
+		  # rk3566_core_builds (by build_sdl2.sh) which lacks the rk3562-specific
+		  # rotation patches (0000, 0008). Overlay them from the local fork.
+		  if [ "$CHIPSET" == "rk3562" ]; then
+		    sudo cp rk3562_core_builds/patches/retroarch-patch-* Arkbuild32/home/ark/${CHIPSET}_core_builds/patches/
+		  fi
 		  # Copy dArkOS-specific RetroArch patches into core_builds patches dir (32-bit)
 		  if ls retroarch-patches/retroarch-patch-* 1>/dev/null 2>&1; then
 		    echo "Injecting dArkOS RetroArch patches (32-bit)..."
@@ -227,9 +241,11 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
 		  fi
 		  # Remove rotation patches for landscape-native devices (32-bit)
 		  if [ "$CHIPSET" == "rk3562" ] && [ "$UNIT" != "rg56pro" ]; then
-		    rm -f Arkbuild32/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0000-rk3562-rotation-90.patch
-		    rm -f Arkbuild32/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0008-norotation-rga.patch
+		    sudo rm -f Arkbuild32/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0000-rk3562-rotation-90.patch
+		    sudo rm -f Arkbuild32/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0008-norotation-rga.patch
 		  fi
+		  # 32-bit uses the same GO2_ROTATION_DEGREES_90 as 64-bit.
+		  # (Previously reverted to 270 based on incorrect GBM buffer orientation theory.)
 		  call_chroot32 "cd /home/ark &&
 			if [ ! -d ${CHIPSET}_core_builds ]; then git clone https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds.git ${CHIPSET}_core_builds; fi &&
 			cd ${CHIPSET}_core_builds &&
@@ -249,10 +265,12 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
 		sudo mkdir -p Arkbuild/home/ark/.config/retroarch32/autoconfig/udev
 		if [ "$UNIT" == "rgb10" ] || [ "$UNIT" == "rk2020" ]; then
 		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32.${CHIPSET}.rot Arkbuild/opt/retroarch/bin/retroarch32
-		elif [ "$UNIT" == "rg56pro" ]; then
-		  # RG56 Pro has a portrait panel — use the RGA-rotated binary (90° via patch 0000)
+		elif [ "$CHIPSET" == "rk3562" ]; then
+		  # RK3562: always use retroarch32-rgarotated (the first binary produced by builds-alt.sh).
+		  # On rg56pro it has rotation patches applied; on landscape devices (rg43h) the rotation
+		  # patches are removed so it's a normal unrotated build despite the misleading name.
 		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32-rgarotated Arkbuild/opt/retroarch/bin/retroarch32
-		elif [ "$CHIPSET" == "rk3566" ] || [ "$CHIPSET" == "rk3562" ]; then
+		elif [ "$CHIPSET" == "rk3566" ]; then
 		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32 Arkbuild/opt/retroarch/bin/retroarch32
 		else
 		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32.${CHIPSET}.unrot Arkbuild/opt/retroarch/bin/retroarch32
