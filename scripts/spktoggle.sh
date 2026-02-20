@@ -36,8 +36,8 @@ if [ "$(cat /home/ark/.config/.DEVICE)" == "RGB30" ] || [ "$(cat /home/ark/.conf
 else
   if [ -z "$spktoggle" ]
   then
-    if [ "$(cat /home/ark/.config/.DEVICE)" == "RG56PRO" ]; then
-      # RG56 Pro speaker is driven via HP output + external amplifier (hp-ctl-gpios).
+    if [ "$(cat /home/ark/.config/.DEVICE)" == "RG56PRO" ] || [ "$(cat /home/ark/.config/.DEVICE)" == "RG43H" ]; then
+      # RK3562 devices: speaker is driven via HP output + external amplifier (hp-ctl-gpios).
       # Setting SPK disables the ext amp GPIO, cutting audio.
       amixer -q sset 'Playback Path' HP
     elif [ "$(cat /home/ark/.config/.DEVICE)" != "A10MINI" ]; then
