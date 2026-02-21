@@ -19,8 +19,8 @@ elif [[ "$UNIT" == "rgb20pro" ]]; then
   BUILD_UNIT="RGB20PRO"
 fi
 
-# Copy RG56PRO patch script into chroot if needed
-if [ "$BUILD_UNIT" == "RG56PRO" ]; then
+# Copy RK3562 patch script into chroot if needed (both RG56PRO and RG43H)
+if [ "$BUILD_UNIT" == "RG56PRO" ] || [ "$BUILD_UNIT" == "RG43H" ]; then
   sudo cp patch_351files_rg56pro.py Arkbuild/home/ark/
 fi
 
