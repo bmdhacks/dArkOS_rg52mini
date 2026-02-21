@@ -1,0 +1,13 @@
+[Unit]
+Description=RK817 PMIC Power Off
+DefaultDependencies=no
+Before=systemd-poweroff.service
+After=shutdown.target umount.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/rk3562-poweroff.sh
+TimeoutStartSec=5
+
+[Install]
+WantedBy=poweroff.target

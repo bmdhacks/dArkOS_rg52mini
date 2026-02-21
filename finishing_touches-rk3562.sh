@@ -163,6 +163,12 @@ if [ -d "dArkOS_Tools/${CHIPSET}" ]; then
     sudo cp "dArkOS_Tools/${CHIPSET}/Disable Low Battery Warning.sh" Arkbuild/usr/local/bin/
   fi
 fi
+# Button swap scripts (RG56 Pro only -- has both HOME/FN and BACK buttons)
+if [ "$UNIT" == "rg56pro" ]; then
+  sudo cp "dArkOS_Tools/rk3562/Swap Start+Select with FN+Back.sh" Arkbuild/opt/system/Advanced/
+  sudo cp "dArkOS_Tools/rk3562/Swap Start+Select with FN+Back.sh" Arkbuild/usr/local/bin/
+  sudo cp "dArkOS_Tools/rk3562/Restore Start+Select.sh" Arkbuild/usr/local/bin/
+fi
 sudo cp dArkOS_Tools/Advanced/*.sh Arkbuild/opt/system/Advanced/
 sudo cp scripts/"Enable Quick Mode".sh Arkbuild/opt/system/Advanced/
 if [ -f "scripts/${CHIPSET}/Fix Audio.sh" ]; then
@@ -189,6 +195,16 @@ sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/loca
 # DMA heap permissions — Mali EGL needs access as non-root user
 echo -e "Generating 99-dma-heap.rules udev for Mali GPU access"
 echo 'SUBSYSTEM=="dma_heap", MODE="0666"' | sudo tee Arkbuild/etc/udev/rules.d/99-dma-heap.rules
+
+# Joystick button swap persistence -- restore swap state on boot if flag file exists
+echo 'ACTION=="add", SUBSYSTEM=="platform", DRIVER=="rk3562-joystick", RUN+="/bin/sh -c '\''test -f /home/ark/.config/.SWAP_START_HOME && echo 1 > /sys%p/swap_start_home'\''"' | sudo tee Arkbuild/etc/udev/rules.d/99-joystick-swap.rules
+
+# RK817 PMIC poweroff service — bypasses ATF's broken SYSTEM_OFF
+# (ATF asserts SLPPIN with pmic-reset-func=0 → resets instead of powering off)
+sudo cp scripts/rk3562-poweroff.sh Arkbuild/usr/local/bin/rk3562-poweroff.sh
+sudo chmod 755 Arkbuild/usr/local/bin/rk3562-poweroff.sh
+sudo cp scripts/rk3562-poweroff.service Arkbuild/etc/systemd/system/rk3562-poweroff.service
+call_chroot "systemctl enable rk3562-poweroff"
 
 # Vulkan ICD manifest + info utility
 sudo mkdir -p Arkbuild/usr/share/vulkan/icd.d

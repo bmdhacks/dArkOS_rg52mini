@@ -188,16 +188,20 @@ if [ -f "${BSP_PATH}/bootloader_area.img" ]; then
   sudo dd if=${BSP_PATH}/bootloader_area.img of=$LOOP_DEV bs=$SECTOR_SIZE skip=64 seek=64 count=16320 conv=notrunc
 fi
 
-# Flash U-Boot FIT image to uboot partition
-if [ -f "${BSP_PATH}/uboot.img" ]; then
-  echo "Flashing U-Boot FIT image..."
-  sudo dd if=${BSP_PATH}/uboot.img of=$LOOP_DEV bs=$SECTOR_SIZE seek=16384 conv=notrunc
+# Flash U-Boot FIT image to uboot partition (per-device charge-enabled image)
+UBOOT_IMG="${BSP_PATH}/uboot-${UNIT}.img"
+if [ ! -f "${UBOOT_IMG}" ]; then
+  UBOOT_IMG="${BSP_PATH}/uboot.img"
+fi
+if [ -f "${UBOOT_IMG}" ]; then
+  echo "Flashing U-Boot FIT image ($(basename ${UBOOT_IMG}))..."
+  sudo dd if=${UBOOT_IMG} of=$LOOP_DEV bs=$SECTOR_SIZE seek=16384 conv=notrunc
 fi
 
 # Copy U-Boot image for potential recovery
 sudo mkdir -p Arkbuild/usr/local/bin/
-if [ -f "${BSP_PATH}/uboot.img" ]; then
-  sudo cp ${BSP_PATH}/uboot.img Arkbuild/usr/local/bin/uboot.img.emuelec
+if [ -f "${UBOOT_IMG}" ]; then
+  sudo cp ${UBOOT_IMG} Arkbuild/usr/local/bin/uboot.img.emuelec
 fi
 
 # Create config directory for kernel version info
