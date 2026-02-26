@@ -16,6 +16,9 @@ case $1 in
       systemctl stop emulationstation
     fi
 
+    # Ensure Resume Path is enabled so RK817 codec restores audio on wake
+    amixer -q sset 'Resume Path' ON 2>/dev/null
+
     # Save audio state
     /usr/sbin/alsactl store -f /var/local/asound.state
 
@@ -29,9 +32,39 @@ case $1 in
 
     # Save governor settings before sleep
     sudo sleep_governors.sh SaveSettingsOnSleep
+
+    # Turn off power LEDs during sleep
+    # GPIO3_A0 (green) = bank 3 * 32 + pin 0 = 96
+    # GPIO3_A1 (red)   = bank 3 * 32 + pin 1 = 97
+    # U-Boot sets green=charged, red=charging; save state to restore on wake
+    for gpio in 96 97; do
+      if [ ! -d /sys/class/gpio/gpio${gpio} ]; then
+        echo ${gpio} > /sys/class/gpio/export 2>/dev/null
+        echo out > /sys/class/gpio/gpio${gpio}/direction 2>/dev/null
+      fi
+    done
+    cat /sys/class/gpio/gpio96/value > /var/local/led_green.state 2>/dev/null
+    cat /sys/class/gpio/gpio97/value > /var/local/led_red.state 2>/dev/null
+    echo 0 > /sys/class/gpio/gpio96/value 2>/dev/null
+    echo 0 > /sys/class/gpio/gpio97/value 2>/dev/null
     ;;
 
    post)
+    # Restore power LEDs after wake (saved state from pre-suspend)
+    # Re-ensure direction is "out" — GPIO controller may reset on resume
+    echo out > /sys/class/gpio/gpio96/direction 2>/dev/null
+    echo out > /sys/class/gpio/gpio97/direction 2>/dev/null
+    if [ -f /var/local/led_green.state ]; then
+      cat /var/local/led_green.state > /sys/class/gpio/gpio96/value 2>/dev/null
+    else
+      echo 1 > /sys/class/gpio/gpio96/value 2>/dev/null
+    fi
+    if [ -f /var/local/led_red.state ]; then
+      cat /var/local/led_red.state > /sys/class/gpio/gpio97/value 2>/dev/null
+    else
+      echo 0 > /sys/class/gpio/gpio97/value 2>/dev/null
+    fi
+
     # Restore brightness
     echo $(cat /var/local/cur_bright.state) | sudo tee /sys/class/backlight/backlight/brightness
 
