@@ -36,6 +36,18 @@ state.rockchiprk817 {
 	}
 	control.3 {
 		iface MIXER
+		name 'Resume Path'
+		value ON
+		comment {
+			access 'read write'
+			type ENUMERATED
+			count 1
+			item.0 OFF
+			item.1 ON
+		}
+	}
+	control.4 {
+		iface MIXER
 		name 'Master Playback Volume'
 		value.0 74
 		value.1 74
