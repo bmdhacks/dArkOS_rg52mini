@@ -152,6 +152,20 @@ do
 done
 cd ../../../../
 
+# Do the same for 32-bit armhf — apt install of libsdl2-dev:armhf pulls in Mesa's
+# libegl-dev:armhf which overwrites the Mali symlinks with Mesa stubs.
+if [[ "${BUILD_ARMHF}" == "y" ]]; then
+  cd Arkbuild/usr/lib/arm-linux-gnueabihf
+  sudo rm -f libEGL_mesa.so* libGLX_mesa.so* libGLESv1_CM.so.1.2.* libGLESv2.so.2.1.*
+  sudo rm -f libGL.so* libGLX.so* libGLdispatch.so* libGLX_indirect.so*
+  for LIB in libEGL.so libEGL.so.1 libEGL.so.1.1.0 libGLES_CM.so libGLES_CM.so.1 libGLESv1_CM.so libGLESv1_CM.so.1 libGLESv1_CM.so.1.1.0 libGLESv2.so libGLESv2.so.2 libGLESv2.so.2.0.0 libGLESv2.so.2.1.0 libGLESv3.so libGLESv3.so.3 libgbm.so libgbm.so.1 libgbm.so.1.0.0 libmali.so libmali.so.1 libMaliOpenCL.so libOpenCL.so libwayland-egl.so libwayland-egl.so.1 libwayland-egl.so.1.0.0
+  do
+    sudo rm -fv ${LIB}
+    sudo ln -sfv libMali.so ${LIB}
+  done
+  cd ../../../../
+fi
+
 if [[ "${ENABLE_CACHE}" == "y" ]]; then
   sudo rm -f Arkbuild/etc/apt/apt.conf.d/99proxy
   sudo sed -i '/127.0.0.1:3142\//s///' Arkbuild/etc/apt/sources.list
