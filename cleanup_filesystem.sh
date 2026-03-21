@@ -172,6 +172,7 @@ call_chroot "ldconfig"
 
 # Re-create Mali symlinks for 32-bit armhf AFTER ldconfig, which regenerates versioned
 # symlinks from any Mesa .so files that were pulled in as apt dependencies.
+# Mirrors the aarch64 block above.
 if [[ "${BUILD_ARMHF}" == "y" ]]; then
   cd Arkbuild/usr/lib/arm-linux-gnueabihf
   sudo rm -f libEGL_mesa.so* libGLX_mesa.so* libGLESv1_CM.so.1.2.* libGLESv2.so.2.1.*
