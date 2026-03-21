@@ -84,10 +84,13 @@ do
     )
   elif [ -f "Arkbuild/usr/lib/${ARCHITECTURE}/libmali.so.1" ]; then
     # Check if Mali already installed (e.g. from build_kernel step)
+    # Resolve libmali.so.1 to the actual blob so libMali.so points directly to it,
+    # avoiding a cycle when the symlink loop below sets libmali.so.1 -> libMali.so.
     echo "Mali libraries already installed, creating symlinks..."
     (
       cd Arkbuild/usr/lib/${ARCHITECTURE}
-      sudo ln -sf libmali.so.1 libMali.so
+      MALI_REAL=$(readlink -f libmali.so.1)
+      sudo ln -sf $(basename ${MALI_REAL}) libMali.so
     )
   else
     # Download Mali from core_builds repo (rk3566, rk3326, etc.)
