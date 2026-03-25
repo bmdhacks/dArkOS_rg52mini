@@ -71,12 +71,13 @@ if [ "$?" -eq "10" ]; then
                   "1)" "Emulationstation"
                   "2)" "Retroarch"
                   "3)" "Wifi"
-                  "4)" "Enable Remote Services"
-                  "5)" "351Files"
-                  "6)" "Backup ArkOS Settings"
-                  "7)" "Restore ArkOS Settings"
-                  "8)" "Reboot"
-                  "9)" "Power Off"
+                  "4)" "Bluetooth"
+                  "5)" "Enable Remote Services"
+                  "6)" "351Files"
+                  "7)" "Backup ArkOS Settings"
+                  "8)" "Restore ArkOS Settings"
+                  "9)" "Reboot"
+                  "10)" "Power Off"
           )
 
           choices=$("${selection[@]}" "${options[@]}" 2>&1 > /dev/tty1)
@@ -110,21 +111,25 @@ if [ "$?" -eq "10" ]; then
                                 /opt/system/Wifi.sh
                                 boot_controls
                                 ;;
-                          "4)") /opt/system/Enable\ Remote\ Services.sh 2>&1 > /dev/tty1
+                          "4)") kill_boot_controls
+                                /opt/system/Bluetooth.sh
+                                boot_controls
                                 ;;
-                          "5)") /opt/system/351Files.sh 2>&1 > /dev/tty1
+                          "5)") /opt/system/Enable\ Remote\ Services.sh 2>&1 > /dev/tty1
                                 ;;
-                          "6)") kill_boot_controls
+                          "6)") /opt/system/351Files.sh 2>&1 > /dev/tty1
+                                ;;
+                          "7)") kill_boot_controls
                                 /opt/system/Advanced/"Backup ArkOS Settings.sh" 2>&1 > /dev/tty1
                                 boot_controls
                                 ;;
-                          "7)") kill_boot_controls
+                          "8)") kill_boot_controls
                                 /opt/system/Advanced/"Restore ArkOS Settings.sh" 2>&1 > /dev/tty1
                                 boot_controls
                                 ;;
-                          "8)") sudo reboot
+                          "9)") sudo reboot
                                 ;;
-                          "9)") sudo shutdown now
+                          "10)") sudo shutdown now
                                 ;;
                   esac
           done

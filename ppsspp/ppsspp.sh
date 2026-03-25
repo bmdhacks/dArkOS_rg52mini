@@ -56,3 +56,10 @@ else
   /usr/local/bin/retroarch -L /home/ark/.config/retroarch/cores/ppsspp_libretro.so "$2"
   sudo kill -9 $(pidof watchpsp.sh)
 fi
+
+# Restore RK817 codec state after emulator exit (RK3562 devices only) —
+# PPSSPP can leave the audio path in a bad state.
+if [ "$(cat /home/ark/.config/.DEVICE)" == "RG56PRO" ] || [ "$(cat /home/ark/.config/.DEVICE)" == "RG43H" ]; then
+  amixer -q sset 'Playback Path' HP 2>/dev/null
+  amixer -q sset 'Resume Path' ON 2>/dev/null
+fi

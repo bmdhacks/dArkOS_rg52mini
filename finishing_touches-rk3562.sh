@@ -55,6 +55,19 @@ sudo chroot Arkbuild/ bash -c "ln -sfv /home/ark/.asoundrc /etc/asound.conf"
 sudo chroot Arkbuild/ bash -c "cp -fv /usr/share/alsa/alsa.conf /usr/share/alsa/alsa.conf.mednafen"
 sudo chroot Arkbuild/ bash -c "sed -i '/\"\~\/.asoundrc\"/s//\"\~\/.asoundrc.mednafen\"/' /usr/share/alsa/alsa.conf.mednafen"
 
+# Override enable_bluetooth.service for RK3562 (USB dongle, not UART)
+# Generic service has Restart=always for rtk_hciattach foreground process.
+# RK3562 enable_bluetooth.sh just runs 3 commands and exits — use oneshot.
+if [[ "${BUILD_BLUEALSA}" == "y" ]]; then
+  sudo mkdir -p Arkbuild/etc/systemd/system/enable_bluetooth.service.d/
+  cat <<'EOF' | sudo tee Arkbuild/etc/systemd/system/enable_bluetooth.service.d/rk3562.conf
+[Service]
+Type=oneshot
+Restart=no
+RemainAfterExit=yes
+EOF
+fi
+
 # Sleep script and set default SuspendState to freeze
 sudo mkdir -p Arkbuild/usr/lib/systemd/system-sleep
 sudo cp scripts/sleep.${CHIPSET} Arkbuild/usr/lib/systemd/system-sleep/sleep

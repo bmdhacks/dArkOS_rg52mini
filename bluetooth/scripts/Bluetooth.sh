@@ -40,6 +40,10 @@ elif test ! -z "$(cat /home/ark/.config/.DEVICE | grep RGB20PRO | tr -d '\0')"
 then
   height="20"
   width="70"
+elif test ! -z "$(cat /home/ark/.config/.DEVICE | grep -E 'RG56PRO|RG43H' | tr -d '\0')"
+then
+  height="20"
+  width="60"
 fi
 
 export TERM=linux

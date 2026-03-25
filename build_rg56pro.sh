@@ -41,6 +41,9 @@ export BSP_PATH="${PWD}/BSP"
 # Enable armhf (32-bit) support for RetroArch32 and other 32-bit emulators
 export BUILD_ARMHF=y
 
+# Enable Bluetooth support (BlueALSA + UI) by default — USB dongle required
+export BUILD_BLUEALSA=${BUILD_BLUEALSA:-y}
+
 # Debian codename to use (Trixie matches upstream dArkOS package lists)
 export DEBIAN_CODE_NAME=trixie
 
@@ -110,6 +113,9 @@ source ./build_controllertester.sh
 source ./build_drastic.sh
 if [[ "${BUILD_KODI}" == "y" ]]; then
   source ./build_kodi.sh
+fi
+if [[ "${BUILD_BLUEALSA}" == "y" ]]; then
+  source ./build_bluealsa.sh
 fi
 source ./finishing_touches-rk3562.sh
 source ./cleanup_filesystem.sh

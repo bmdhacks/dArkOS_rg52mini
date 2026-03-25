@@ -52,3 +52,9 @@ else
   /usr/local/bin/retroarch -L /home/ark/.config/retroarch/cores/ppsspp_libretro.so "$2"
   sudo kill -9 $(pidof watchpsp.sh)
 fi
+
+# Restore RK817 codec state after emulator exit — PPSSPP can leave the
+# audio path in a bad state.  Playback Path=HP is required for the external
+# speaker amplifier, Resume Path=ON ensures the codec restores after sleep.
+amixer -q sset 'Playback Path' HP 2>/dev/null
+amixer -q sset 'Resume Path' ON 2>/dev/null
