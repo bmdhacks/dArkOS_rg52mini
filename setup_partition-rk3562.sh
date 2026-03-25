@@ -7,11 +7,11 @@
 # - uboot (16384-24575): U-Boot FIT image (ATF + OP-TEE + U-Boot + MCU)
 # - resource (24576-32767): DTB resource image
 # - dArkOS_Fat (32768-235519): FAT32 boot partition (~100MB)
-# - rootfs (237568+): ext4 root filesystem
+# - rootfs (237568+): btrfs root filesystem
 # - ROMS partition: FAT32 for game storage
 #
 
-ROOT_FILESYSTEM_FORMAT="ext4"
+ROOT_FILESYSTEM_FORMAT="btrfs"
 if [ "$ROOT_FILESYSTEM_FORMAT" == "xfs" ] || [ "$ROOT_FILESYSTEM_FORMAT" == "btrfs" ]; then
   ROOT_FILESYSTEM_FORMAT_PARAMETERS="-f -L ROOTFS"
   if [ "$ROOT_FILESYSTEM_FORMAT" != "btrfs" ]; then

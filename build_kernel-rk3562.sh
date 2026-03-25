@@ -159,7 +159,7 @@ fi
   # /dev/mmcblk1p4 doesn't exist, so it skips copying fsck/logsave entirely.
   # The initramfs scripts/functions still calls logsave unconditionally, and
   # the missing binary causes exit code 127 -> panic at boot.
-  for bin in /sbin/fsck /sbin/logsave /sbin/e2fsck /sbin/fsck.ext4; do
+  for bin in /sbin/fsck /sbin/logsave /sbin/fsck.btrfs; do
     src="../../Arkbuild${bin}"
     if [ -f "$src" ]; then
       cp "$src" ".${bin}"

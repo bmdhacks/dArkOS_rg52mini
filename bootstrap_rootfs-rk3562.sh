@@ -54,7 +54,7 @@ sudo chroot Arkbuild/ mount -t proc proc /proc
 # Install base runtime packages (use noninteractive to avoid debconf prompts)
 sudo chroot Arkbuild/ bash -c "DEBIAN_FRONTEND=noninteractive eatmydata apt-get -y update"
 sudo chroot Arkbuild/ bash -c "DEBIAN_FRONTEND=noninteractive eatmydata apt-get -y upgrade"
-sudo chroot Arkbuild/ bash -c "DEBIAN_FRONTEND=noninteractive eatmydata apt-get install -y e2fsprogs initramfs-tools sudo evtest network-manager systemd-sysv locales locales-all ssh dosfstools fluidsynth"
+sudo chroot Arkbuild/ bash -c "DEBIAN_FRONTEND=noninteractive eatmydata apt-get install -y btrfs-progs initramfs-tools sudo evtest network-manager systemd-sysv locales locales-all ssh dosfstools fluidsynth"
 sudo chroot Arkbuild/ bash -c "DEBIAN_FRONTEND=noninteractive eatmydata apt-get install -y python3 python3-pip"
 sudo sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' Arkbuild/etc/locale.gen
 echo 'LANG="en_US.UTF-8"' | sudo tee -a Arkbuild/etc/default/locale > /dev/null
