@@ -1,15 +1,15 @@
 #!/bin/bash
 #
-# Kernel Build and Installation for RK3562 (RG56 Pro)
+# Kernel Build and Installation for RK3562 (RG56 Pro / RG43H Pro)
 #
-# Builds the kernel from source (kernel_rk3562/) with fbdev emulation
-# enabled, and installs BSP components (firmware, bootloader) from the
-# EmuELEC BSP extract. Mali GPU libraries are handled by build_deps.sh
-# (downloaded from rk3566_core_builds, g13p0 DDK).
+# Builds the kernel and device tree from source (kernel_rk3562/), and
+# installs BSP components (firmware, bootloader) from the EmuELEC BSP
+# extract. Mali GPU libraries are handled by build_deps.sh.
 #
 # Kernel source required at: ${KERNEL_SRC_PATH}
-#   - Must have .config already prepared (use proc.config from device)
-#   - Must have rk915 WiFi driver patched in
+#   - Must have .config already prepared (use ${UNIT}_defconfig)
+#   - DTS source: arch/arm64/boot/dts/rockchip/rk3562-{rg56pro,rg43h}.dts
+#   - Shared DTSI: arch/arm64/boot/dts/rockchip/rk3562-darkos.dtsi
 #
 # BSP components required in ${BSP_PATH}:
 #   - librga/ (BSP librga.so.2.1.0 + headers for RGA3 ABI)
@@ -22,9 +22,10 @@
 # Kernel source tree lives alongside the dArkOS build directory
 KERNEL_SRC_PATH="${PWD}/kernel_rk3562"
 
-# Patched DTB (VOP2 plane-mask + rockchip-suspend enabled). This is the single
-# source of truth for the device tree. Decompile with dtc to edit, recompile back.
-DTB_FILE="${PWD}/BSP/${UNIT_DTB}.dtb"
+# Device tree is built from DTS source in the kernel tree.
+# DTS source files: arch/arm64/boot/dts/rockchip/rk3562-{rg56pro,rg43h}.dts
+# Shared base:      arch/arm64/boot/dts/rockchip/rk3562-darkos.dtsi
+DTB_FILE="${KERNEL_SRC_PATH}/arch/arm64/boot/dts/rockchip/${UNIT_DTB}.dtb"
 
 echo "Building and installing kernel for RK3562..."
 
@@ -55,24 +56,23 @@ fi
 # Mali GPU blob is downloaded by build_deps.sh (g13p0 from rk3566_core_builds)
 # Only the DTB and firmware are required from BSP
 
-# Verify patched DTB exists
-if [ ! -f "${DTB_FILE}" ]; then
-  echo "ERROR: Patched DTB not found at ${DTB_FILE}"
-  echo "This compiled DTB is the source of truth. To edit: dtc -I dtb -O dts ${DTB_FILE} > /tmp/rg56pro.dts"
-  exit 1
-fi
-
 # Ensure kernel .config exists
 if [ ! -f "${KERNEL_SRC_PATH}/.config" ]; then
   echo "Generating kernel .config from ${UNIT}_defconfig..."
   make -C "${KERNEL_SRC_PATH}" ${UNIT}_defconfig
 fi
 
-# Build kernel Image
-echo "Building kernel Image..."
-make -C "${KERNEL_SRC_PATH}" -j$(nproc) Image
+# Build kernel Image and device tree
+echo "Building kernel Image and DTB..."
+make -C "${KERNEL_SRC_PATH}" -j$(nproc) Image rockchip/${UNIT_DTB}.dtb
 if [ $? -ne 0 ]; then
   echo "ERROR: Kernel build failed"
+  exit 1
+fi
+
+# Verify DTB was built
+if [ ! -f "${DTB_FILE}" ]; then
+  echo "ERROR: DTB not found at ${DTB_FILE}"
   exit 1
 fi
 
@@ -137,8 +137,7 @@ call_chroot "depmod ${KERNEL_VERSION}; update-initramfs -c -k ${KERNEL_VERSION}"
 sudo cp Arkbuild/boot/initrd.img-${KERNEL_VERSION} ${mountpoint}/initrd.img
 
 if ! command -v mkimage &> /dev/null; then
-  sudo apt -y update
-  sudo apt -y install u-boot-tools
+  install_host_package u-boot-tools uboot-tools
 fi
 
 # Update uInitrd to force booting from mmcblk1p4 (SD card rootfs)
