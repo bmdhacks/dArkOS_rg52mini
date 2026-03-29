@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Bluetooth toggle for RK3562 (RG56 Pro)
+# Bluetooth toggle for RK3562 (RG52 Mini)
 #
 
 if systemctl is-active --quiet bluetooth; then

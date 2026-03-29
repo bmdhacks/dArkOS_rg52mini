@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Partition setup for RK3562 (RG56 Pro)
+# Partition setup for RK3562 (RG52 Mini)
 #
 # Partition layout matches the EmuELEC bootloader expectations:
 # - Raw area (0-16383): idbloader at sector 64

@@ -10,7 +10,7 @@ if [ -f "Arkbuild_package_cache/${CHIPSET}/duckstationsa.tar.gz" ]; then
 fi
 if [ ! -f "Arkbuild/opt/duckstation/duckstation-nogui" ] && [ ! -f "Arkbuild_package_cache/${CHIPSET}/duckstationsa.tar.gz" ]; then
 	# Remove rotation patch for landscape-native devices
-	if [ "$CHIPSET" == "rk3562" ] && [ "$UNIT" != "rg56pro" ]; then
+	if [ "$CHIPSET" == "rk3562" ] && [ "$UNIT" != "rg52mini" ]; then
 	  rm -f Arkbuild/home/ark/${CHIPSET}_core_builds/patches/duckstationsa-patch-004-add-rotation.patch
 	fi
 	call_chroot "cd /home/ark &&

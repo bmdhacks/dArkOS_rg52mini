@@ -66,7 +66,7 @@ defh = defh.replace(
 # Step 3: Fix SCREEN section — insert per-device screen blocks and
 # revert the combined guard back to RG503-only for that section.
 
-rg56pro_screen_block = """\
+rg52mini_screen_block = """\
 #elif defined(DEVICE_RG56PRO)
    #define SCREEN_WIDTH             1280
    #define SCREEN_HEIGHT            720
@@ -103,7 +103,7 @@ rg43h_screen_block = """\
 defh = defh.replace(
     "#elif defined(DEVICE_RG503) || defined(DEVICE_RG56PRO) || defined(DEVICE_RG43H)\n"
     "   #define SCREEN_WIDTH",
-    rg56pro_screen_block
+    rg52mini_screen_block
     + rg43h_screen_block
     + "#elif defined(DEVICE_RG503)\n"
     "   #define SCREEN_WIDTH"

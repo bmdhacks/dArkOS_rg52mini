@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Enable Bluetooth for RK3562 (RG56 Pro)
+# Enable Bluetooth for RK3562 (RG52 Mini)
 #
 
 sudo systemctl start bluetooth

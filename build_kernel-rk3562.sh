@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Kernel Build and Installation for RK3562 (RG56 Pro / RG43H Pro)
+# Kernel Build and Installation for RK3562 (RG52 Mini / RG43H Pro)
 #
 # Builds the kernel and device tree from source (kernel_rk3562/), and
 # installs BSP components (firmware, bootloader) from the EmuELEC BSP
@@ -8,7 +8,7 @@
 #
 # Kernel source required at: ${KERNEL_SRC_PATH}
 #   - Must have .config already prepared (use ${UNIT}_defconfig)
-#   - DTS source: arch/arm64/boot/dts/rockchip/rk3562-{rg56pro,rg43h}.dts
+#   - DTS source: arch/arm64/boot/dts/rockchip/rk3562-{rg52mini,rg43h}.dts
 #   - Shared DTSI: arch/arm64/boot/dts/rockchip/rk3562-darkos.dtsi
 #
 # BSP components required in ${BSP_PATH}:
@@ -23,7 +23,7 @@
 KERNEL_SRC_PATH="${PWD}/kernel_rk3562"
 
 # Device tree is built from DTS source in the kernel tree.
-# DTS source files: arch/arm64/boot/dts/rockchip/rk3562-{rg56pro,rg43h}.dts
+# DTS source files: arch/arm64/boot/dts/rockchip/rk3562-{rg52mini,rg43h}.dts
 # Shared base:      arch/arm64/boot/dts/rockchip/rk3562-darkos.dtsi
 DTB_FILE="${KERNEL_SRC_PATH}/arch/arm64/boot/dts/rockchip/${UNIT_DTB}.dtb"
 

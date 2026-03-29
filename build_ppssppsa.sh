@@ -18,9 +18,9 @@ else
 	  # RK3562 uses VK_KHR_display which needs pixel_xres/yres to match the actual
 	  # display mode; SDL reports 1280x720 via RGA rotation, not 320x240.
 	  rm -f Arkbuild/home/ark/${CHIPSET}_core_builds/patches/ppsspp-patch-003-fix-window-size.patch
-	  # The Vulkan rotation patch is only for portrait-panel devices (e.g. RG56 Pro).
+	  # The Vulkan rotation patch is only for portrait-panel devices (e.g. RG52 Mini).
 	  # Remove it for landscape-native devices to avoid unnecessary rotation.
-	  if [ "$UNIT" != "rg56pro" ]; then
+	  if [ "$UNIT" != "rg52mini" ]; then
 	    rm -f Arkbuild/home/ark/${CHIPSET}_core_builds/patches/ppsspp-patch-010-rk3562-vulkan-rotation.patch
 	  fi
 	fi

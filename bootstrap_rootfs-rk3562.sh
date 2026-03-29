@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Bootstrap Debian rootfs for RK3562 (RG56 Pro)
+# Bootstrap Debian rootfs for RK3562 (RG52 Mini)
 #
 
 echo -e "Bootstrapping Debian for RK3562....\n\n"
@@ -71,7 +71,7 @@ setup_ark_user
 sleep 10
 
 # Generate /etc/fstab
-# Note: RG56 Pro boots from SD card as mmcblk1 (eMMC is mmcblk0)
+# Note: RG52 Mini boots from SD card as mmcblk1 (eMMC is mmcblk0)
 echo -e "Generating /etc/fstab"
 FSTAB="/dev/mmcblk1p4 / ${ROOT_FILESYSTEM_FORMAT} ${ROOT_FILESYSTEM_MOUNT_OPTIONS} 0 0
 /dev/mmcblk1p3 /boot vfat defaults,noatime 0 2"

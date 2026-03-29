@@ -1,4 +1,4 @@
-From: dArkOS RG56 Pro port
+From: dArkOS RG52 Mini port
 Subject: Fix libgo2 BGRA/RGBA color format for RGA blits
 
 The bundled libgo2 maps DRM_FORMAT_ARGB8888/XRGB8888 to RK_FORMAT_BGRA_8888,

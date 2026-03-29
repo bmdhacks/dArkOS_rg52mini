@@ -2,7 +2,7 @@
 #
 # dArkOS Build Script for RG43H Pro (RK3562)
 #
-# Same RK3562 SoC as the RG56 Pro, but with a 1024x768 landscape-native
+# Same RK3562 SoC as the RG52 Mini, but with a 1024x768 landscape-native
 # display (no rotation needed), 1GB RAM, and slightly different gamepad
 # wiring (9 GPIO buttons vs 10, no HOME button).
 #

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Build and install EmulationStation-fcamod for RK3562 (RG56 Pro)
+# Build and install EmulationStation-fcamod for RK3562 (RG52 Mini)
 #
 
 if [ -f exports.sh ];

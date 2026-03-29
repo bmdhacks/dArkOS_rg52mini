@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build SDL2 with RGA rotation patches directly on the RG56 Pro.
+# Build SDL2 with RGA rotation patches directly on the RG52 Mini.
 # Usage: scp this script + the two patch files to the device, then run it.
 #
 # Prerequisites (should already be installed from the build):

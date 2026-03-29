@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# dArkOS Build Script for RG56 Pro (RK3562)
+# dArkOS Build Script for RG52 Mini (RK3562)
 #
 # Kernel is compiled from source (../kernel_rk3562/) with fbdev emulation
 # and rk915 WiFi driver. Mali GPU libraries and firmware are from the
@@ -23,7 +23,7 @@ fi
 (
 # Set chipset and unit in environment variables
 export CHIPSET=rk3562
-export UNIT=rg56pro
+export UNIT=rg52mini
 export UNIT_DTB=${CHIPSET}-${UNIT}
 
 # Enable apt-cacher-ng for faster rebuilds
@@ -124,4 +124,4 @@ source ./clean_mounts.sh
 source ./create_image.sh
 ) 2>&1 | tee -a build.log
 
-echo "RG56 Pro build completed. Final image is ready."
+echo "RG52 Mini build completed. Final image is ready."

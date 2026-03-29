@@ -21,7 +21,7 @@ else
 	    sudo cp retroarch-patches/retroarch-patch-* Arkbuild/home/ark/${CHIPSET}_core_builds/patches/
 	  fi
 	  # Remove rotation patches for landscape-native devices
-	  if [ "$CHIPSET" == "rk3562" ] && [ "$UNIT" != "rg56pro" ]; then
+	  if [ "$CHIPSET" == "rk3562" ] && [ "$UNIT" != "rg52mini" ]; then
 	    sudo rm -f Arkbuild/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0000-rk3562-rotation-90.patch
 	    sudo rm -f Arkbuild/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0008-norotation-rga.patch
 	  fi
@@ -47,7 +47,7 @@ else
 	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch.${CHIPSET}.rot Arkbuild/opt/retroarch/bin/retroarch
 	elif [ "$CHIPSET" == "rk3562" ]; then
 	  # RK3562: always use retroarch-rgarotated (the first binary produced by builds-alt.sh).
-	  # On rg56pro it has rotation patches applied; on landscape devices (rg43h) the rotation
+	  # On rg52mini it has rotation patches applied; on landscape devices (rg43h) the rotation
 	  # patches are removed so it's a normal unrotated build despite the misleading name.
 	  sudo cp -a Arkbuild/home/ark/${CHIPSET}_core_builds/retroarch64/retroarch-rgarotated Arkbuild/opt/retroarch/bin/retroarch
 	elif [ "$CHIPSET" == "rk3566" ]; then
@@ -240,7 +240,7 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
 		    sudo cp retroarch-patches/retroarch-patch-* Arkbuild32/home/ark/${CHIPSET}_core_builds/patches/
 		  fi
 		  # Remove rotation patches for landscape-native devices (32-bit)
-		  if [ "$CHIPSET" == "rk3562" ] && [ "$UNIT" != "rg56pro" ]; then
+		  if [ "$CHIPSET" == "rk3562" ] && [ "$UNIT" != "rg52mini" ]; then
 		    sudo rm -f Arkbuild32/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0000-rk3562-rotation-90.patch
 		    sudo rm -f Arkbuild32/home/ark/${CHIPSET}_core_builds/patches/retroarch-patch-0008-norotation-rga.patch
 		  fi
@@ -267,7 +267,7 @@ if [[ "${BUILD_ARMHF}" == "y" ]]; then
 		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32.${CHIPSET}.rot Arkbuild/opt/retroarch/bin/retroarch32
 		elif [ "$CHIPSET" == "rk3562" ]; then
 		  # RK3562: always use retroarch32-rgarotated (the first binary produced by builds-alt.sh).
-		  # On rg56pro it has rotation patches applied; on landscape devices (rg43h) the rotation
+		  # On rg52mini it has rotation patches applied; on landscape devices (rg43h) the rotation
 		  # patches are removed so it's a normal unrotated build despite the misleading name.
 		  sudo cp Arkbuild32/home/ark/${CHIPSET}_core_builds/retroarch32/retroarch32-rgarotated Arkbuild/opt/retroarch/bin/retroarch32
 		elif [ "$CHIPSET" == "rk3566" ]; then

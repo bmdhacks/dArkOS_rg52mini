@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Write rootfs to disk for RK3562 (RG56 Pro)
+# Write rootfs to disk for RK3562 (RG52 Mini)
 #
 
 echo "Writing rootfs to disk image..."

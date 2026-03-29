@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# First boot expansion script for RK3562 (RG56 Pro)
+# First boot expansion script for RK3562 (RG52 Mini)
 # Expands rootfs and converts ROMS partition to exfat
 #
 

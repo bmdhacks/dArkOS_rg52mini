@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Bluetooth connection manager for RK3562 (RG56 Pro)
+# Bluetooth connection manager for RK3562 (RG52 Mini)
 #
 
 case $1 in

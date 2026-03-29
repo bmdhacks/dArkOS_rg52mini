@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Finishing touches for RK3562 (RG56 Pro)
+# Finishing touches for RK3562 (RG52 Mini)
 #
 # Hardware specifics:
 # - SoC: Rockchip RK3562 (quad Cortex-A53)
@@ -15,7 +15,7 @@
 sudo mkdir -p ${mountpoint}/extlinux
 # Build kernel command line — portrait-panel devices need fbcon rotation
 KCMD_BASE="root=/dev/mmcblk1p4 rootfstype=btrfs initrd=/uInitrd rootwait rw fsck.repair=yes quiet splash net.ifnames=0 console=ttyFIQ0,1500000 console=tty1 plymouth.ignore-serial-consoles consoleblank=0 loglevel=0"
-if [ "$UNIT" == "rg56pro" ]; then
+if [ "$UNIT" == "rg52mini" ]; then
   KCMD_VIDEO="video=HDMI-A-1:1280x720@60 fbcon=rotate:1"
 else
   KCMD_VIDEO=""
@@ -176,8 +176,8 @@ if [ -d "dArkOS_Tools/${CHIPSET}" ]; then
     sudo cp "dArkOS_Tools/${CHIPSET}/Disable Low Battery Warning.sh" Arkbuild/usr/local/bin/
   fi
 fi
-# Button swap scripts (RG56 Pro only -- has both HOME/FN and BACK buttons)
-if [ "$UNIT" == "rg56pro" ]; then
+# Button swap scripts (RG52 Mini only -- has both HOME/FN and BACK buttons)
+if [ "$UNIT" == "rg52mini" ]; then
   sudo cp "dArkOS_Tools/rk3562/Swap Start+Select with FN+Back.sh" Arkbuild/opt/system/Advanced/
   sudo cp "dArkOS_Tools/rk3562/Swap Start+Select with FN+Back.sh" Arkbuild/usr/local/bin/
   sudo cp "dArkOS_Tools/rk3562/Restore Start+Select.sh" Arkbuild/usr/local/bin/

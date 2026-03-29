@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Fix Audio for RK3562 (RG56 Pro)
+# Fix Audio for RK3562 (RG52 Mini)
 # Resets audio configuration for RK817 codec
 #
 

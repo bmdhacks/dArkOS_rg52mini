@@ -104,13 +104,13 @@ rg43h:
 	@sleep 5
 	./build_rg43h.sh
 
-rg56pro:
+rg52mini:
 	$(info dArkOS will be built using the $(DEBIAN_CODE_NAME) release of Debian.)
 	$(info debian building caching enabled? ${ENABLE_CACHE})
 	$(info adding armhf 32bit userspace? ${BUILD_ARMHF})
 	$(info adding bluetooth support? ${BUILD_BLUEALSA})
 	@sleep 5
-	./build_rg56pro.sh
+	./build_rg52mini.sh
 
 devenv:
 	$(info dArkOS will be built using the $(DEBIAN_CODE_NAME) release of Debian.)

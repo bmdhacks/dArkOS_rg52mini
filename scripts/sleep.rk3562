@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Sleep/wake script for RK3562 (RG56 Pro)
+# Sleep/wake script for RK3562 (RG52 Mini)
 # Handles suspend/resume for RK817 PMIC and peripherals
 #
 
