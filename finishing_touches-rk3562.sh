@@ -55,10 +55,17 @@ sudo chroot Arkbuild/ bash -c "ln -sfv /home/ark/.asoundrc /etc/asound.conf"
 sudo chroot Arkbuild/ bash -c "cp -fv /usr/share/alsa/alsa.conf /usr/share/alsa/alsa.conf.mednafen"
 sudo chroot Arkbuild/ bash -c "sed -i '/\"\~\/.asoundrc\"/s//\"\~\/.asoundrc.mednafen\"/' /usr/share/alsa/alsa.conf.mednafen"
 
-# Override enable_bluetooth.service for RK3562 (USB dongle, not UART)
-# Generic service has Restart=always for rtk_hciattach foreground process.
-# RK3562 enable_bluetooth.sh just runs 3 commands and exits — use oneshot.
+# Bluetooth for RK3562 — USB dongle only (RK915 has no BT)
+# Generic enable_bluetooth.sh runs rtk_hciattach on UART (for RK3566 Realtek combo chips).
+# Replace with RK3562 version that just starts bluez + bluealsa services.
 if [[ "${BUILD_BLUEALSA}" == "y" ]]; then
+  # Replace generic enable_bluetooth.sh with RK3562 version
+  sudo cp scripts/rk3562/enable_bluetooth.sh Arkbuild/usr/local/bin/enable_bluetooth.sh
+  sudo cp scripts/rk3562/bttoggle.sh Arkbuild/usr/local/bin/bttoggle.sh
+  sudo cp scripts/rk3562/btconnected.sh Arkbuild/usr/local/bin/btconnected.sh
+  sudo chmod 755 Arkbuild/usr/local/bin/{enable_bluetooth,bttoggle,btconnected}.sh
+
+  # Override service type — RK3562 script exits immediately (no foreground rtk_hciattach)
   sudo mkdir -p Arkbuild/etc/systemd/system/enable_bluetooth.service.d/
   cat <<'EOF' | sudo tee Arkbuild/etc/systemd/system/enable_bluetooth.service.d/rk3562.conf
 [Service]
@@ -66,6 +73,9 @@ Type=oneshot
 Restart=no
 RemainAfterExit=yes
 EOF
+
+  # Enable bluetooth by default — bluez handles USB dongle hotplug via btusb
+  call_chroot "systemctl enable bluetooth bluealsa enable_bluetooth"
 fi
 
 # Sleep script and set default SuspendState to freeze
