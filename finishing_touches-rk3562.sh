@@ -213,7 +213,7 @@ sudo chmod 0440 Arkbuild/etc/sudoers.d/ark_preserve_sdl_video_egl_driver
 # Add USB DAC Support
 echo -e "Generating 20-usb-alsa.rules udev for usb dac support"
 echo -e "KERNEL==\"controlC[0-9]*\", DRIVERS==\"usb\", SYMLINK=\"snd/controlC7\"" | sudo tee Arkbuild/etc/udev/rules.d/20-usb-alsa.rules
-sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/checknswitchforusbdac.sh &\") | crontab -"
+sudo chroot Arkbuild/ bash -c "(crontab -l 2>/dev/null; echo \"@reboot /usr/local/bin/checknswitchforusbdac.sh > /dev/null 2>&1 &\") | crontab -"
 
 # DMA heap permissions — Mali EGL needs access as non-root user
 echo -e "Generating 99-dma-heap.rules udev for Mali GPU access"
