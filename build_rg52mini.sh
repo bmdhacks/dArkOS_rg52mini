@@ -75,6 +75,7 @@ source ./build_sdl2.sh
 source ./build_ppssppsa.sh
 source ./build_ppsspp-2021sa.sh
 source ./build_duckstationsa.sh
+source ./build_aethersx2sa.sh
 source ./build_mupen64plussa.sh
 source ./build_gzdoom.sh
 source ./build_lzdoom.sh

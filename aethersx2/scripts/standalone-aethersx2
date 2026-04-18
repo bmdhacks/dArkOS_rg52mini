@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# AetherSX2 launcher for dArkOS (RK3562 / KMSDRM).
+#
+# Adapted from ROCKNIX start_aethersx2.sh — the major changes vs upstream:
+#   QT_QPA_PLATFORM=eglfs    (bare KMSDRM, no Wayland compositor)
+#   SDL_AUDIODRIVER=alsa     (dArkOS uses ALSA / bluealsa)
+#   SDL_VIDEODRIVER=kmsdrm   (match Mali EGL stack)
+#   LD_LIBRARY_PATH=/opt/aethersx2/libs
+#   No EMUPERF / taskset    (quad A53 has no big/little split)
+#
+# ES invokes us as:  standalone-aethersx2 %EMULATOR% %ROM%
+# so the ROM path is "$2".
+
+ROM="$2"
+
+# Per-device speaker/codec quirks — restore on exit (matches ppsspp.sh)
+DEVICE="$(cat /home/ark/.config/.DEVICE 2>/dev/null)"
+
+# Ensure runtime dirs exist. /roms/bios and /roms/ps2 are pre-created by
+# the build via game_systems.txt; savestates is per-system convention.
+mkdir -p /home/ark/.config/aethersx2/inis
+mkdir -p /roms/ps2/savestates
+
+# Seed the user's PCSX2.ini from the template if missing.
+if [ ! -f /home/ark/.config/aethersx2/inis/PCSX2.ini ] && \
+   [ -f /opt/aethersx2/templates/PCSX2.ini ]; then
+    cp /opt/aethersx2/templates/PCSX2.ini /home/ark/.config/aethersx2/inis/PCSX2.ini
+fi
+
+# Tell the killer daemon how to terminate us on hotkey
+echo "VAR=aethersx2" > /home/ark/.config/KILLIT
+sudo systemctl restart killer_daemon.service
+
+# --- Qt / EGL / SDL2 environment for KMSDRM ---
+export LD_LIBRARY_PATH=/opt/aethersx2/libs
+export QT_QPA_PLATFORM_PLUGIN_PATH=/opt/aethersx2/libs/plugins
+export QT_QPA_PLATFORM=eglfs
+export QT_QPA_EGLFS_INTEGRATION=eglfs_kms
+export QT_QPA_EGLFS_KMS_ATOMIC=1
+export QT_QPA_EGLFS_HIDECURSOR=1
+export SDL_VIDEODRIVER=kmsdrm
+export SDL_AUDIODRIVER=alsa
+
+# Portrait panel: rotate Qt UI to match SDL2 RGA rotation direction.
+if [ "$DEVICE" = "RG56PRO" ] || [ "$DEVICE" = "RG52MINI" ]; then
+    export QT_QPA_EGLFS_ROTATION=90
+fi
+
+# Run AetherSX2 fullscreen, big-picture mode, with the ROM path.
+/opt/aethersx2/aethersx2 -bigpicture -fullscreen "$ROM"
+
+# Cleanup
+sudo systemctl stop killer_daemon.service
+
+# Restore RK817 codec state after emulator exit (RK3562 devices) —
+# AetherSX2 (like PPSSPP) can leave the audio path in a bad state.
+if [ "$DEVICE" = "RG56PRO" ] || [ "$DEVICE" = "RG52MINI" ] || [ "$DEVICE" = "RG43H" ]; then
+    amixer -q sset 'Playback Path' HP 2>/dev/null
+    amixer -q sset 'Resume Path' ON 2>/dev/null
+fi
