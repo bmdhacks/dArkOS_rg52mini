@@ -24,6 +24,7 @@ libarchive-zip-perl
 libasound2t64
 libboost-filesystem1.83.0
 libboost-filesystem1.88.0
+libenet7
 libfaad2
 libfreeimage3
 libfreetype6

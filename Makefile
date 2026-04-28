@@ -5,12 +5,14 @@ ENABLE_CACHE ?= y
 BUILD_KODI ?= n
 BUILD_ARMHF ?= y
 BUILD_BLUEALSA ?= y
+BUILD_RKMPP_FFMPEG ?= y
 
 export DEBIAN_CODE_NAME
 export ENABLE_CACHE
 export BUILD_KODI
 export BUILD_ARMHF
 export BUILD_BLUEALSA
+export BUILD_RKMPP_FFMPEG
 
 ifeq ($(DEBIAN_CODE_NAME),)
   $(error DEBIAN_CODE_NAME is not set. Please run with DEBIAN_CODE_NAME=suite (e.g., trixie))
@@ -101,6 +103,7 @@ rg43h:
 	$(info debian building caching enabled? ${ENABLE_CACHE})
 	$(info adding armhf 32bit userspace? ${BUILD_ARMHF})
 	$(info adding bluetooth support? ${BUILD_BLUEALSA})
+	$(info adding rkmpp ffmpeg? ${BUILD_RKMPP_FFMPEG})
 	@sleep 5
 	./build_rg43h.sh
 
@@ -109,6 +112,7 @@ rg52mini:
 	$(info debian building caching enabled? ${ENABLE_CACHE})
 	$(info adding armhf 32bit userspace? ${BUILD_ARMHF})
 	$(info adding bluetooth support? ${BUILD_BLUEALSA})
+	$(info adding rkmpp ffmpeg? ${BUILD_RKMPP_FFMPEG})
 	@sleep 5
 	./build_rg52mini.sh
 

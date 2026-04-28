@@ -15,6 +15,7 @@
 <string name="ScreenSaverGameInfo" value="always" />
 <string name="Sega Saturn.emulator" value="standalone-nobios" />
 <string name="SlideshowScreenSaverBackgroundAudioFile" value="/home/ark/.emulationstation/slideshow/audio/slideshow_bg.wav" />
+<string name="SortSystems" value="alpha" />
 <string name="ThemeRegionName" value="" />
 <string name="ThemeSet" value="es-theme-nes-box" />
 <string name="ShowBattery" value="icon" />

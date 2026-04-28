@@ -50,6 +50,12 @@ echo -e "# This host address\n127.0.1.1\t${NAME}" | sudo tee -a Arkbuild/etc/hos
 sudo cp audio/.asoundrc.${CHIPSET} Arkbuild/home/ark/.asoundrc
 sudo cp audio/.asoundrcbak.${CHIPSET} Arkbuild/home/ark/.asoundrcbak
 sudo cp audio/.asoundrcbt.${CHIPSET} Arkbuild/home/ark/.asoundrcbt
+# HDMI audio hot-switch: routes default ALSA PCM to the RK628 HDMI bridge
+# (rockchiphdmirk628 ALSA card) when an HDMI display is connected.
+sudo cp audio/.asoundrchdmi Arkbuild/home/ark/.asoundrchdmi
+sudo cp audio/audio-switch.sh Arkbuild/usr/local/bin/audio-switch.sh
+sudo chmod +x Arkbuild/usr/local/bin/audio-switch.sh
+sudo cp audio/99-hdmi-audio.rules Arkbuild/etc/udev/rules.d/99-hdmi-audio.rules
 sudo chroot Arkbuild/ bash -c "chown ark:ark /home/ark/.asoundrc*"
 sudo chroot Arkbuild/ bash -c "ln -sfv /home/ark/.asoundrc /etc/asound.conf"
 sudo chroot Arkbuild/ bash -c "cp -fv /usr/share/alsa/alsa.conf /usr/share/alsa/alsa.conf.mednafen"

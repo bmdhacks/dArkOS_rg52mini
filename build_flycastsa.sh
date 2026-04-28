@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # Build and install flycast standalone emulator
-if [ -f "Arkbuild_package_cache/${CHIPSET}/flycastsa.tar.gz" ]; then
+# Cache key: SHA of scripts/flycastsa.sh in our rk3562_core_builds submodule.
+FLYCASTSA_RECIPE_SHA=$(git -C rk3562_core_builds ls-tree HEAD scripts/flycastsa.sh 2>/dev/null | awk '{print $3}')
+if [ -f "Arkbuild_package_cache/${CHIPSET}/flycastsa.tar.gz" ] && \
+   [ "$(cat Arkbuild_package_cache/${CHIPSET}/flycastsa.commit 2>/dev/null)" == "${FLYCASTSA_RECIPE_SHA}" ]; then
     sudo tar -xvzpf Arkbuild_package_cache/${CHIPSET}/flycastsa.tar.gz
 else
 	call_chroot "cd /home/ark &&
@@ -16,10 +19,9 @@ else
 	  ext=""
 	fi
 	sudo cp -R Arkbuild/home/ark/${CHIPSET}_core_builds/flycastsa-64/flycast${ext} Arkbuild/opt/flycastsa/flycast
-	if [ -f "Arkbuild_package_cache/${CHIPSET}/flycastsa.tar.gz" ]; then
-	  sudo rm -f Arkbuild_package_cache/${CHIPSET}/flycastsa.tar.gz
-	fi
+	sudo rm -f Arkbuild_package_cache/${CHIPSET}/flycastsa.tar.gz Arkbuild_package_cache/${CHIPSET}/flycastsa.commit
 	sudo tar -czpf Arkbuild_package_cache/${CHIPSET}/flycastsa.tar.gz Arkbuild/opt/flycastsa/
+	echo "${FLYCASTSA_RECIPE_SHA}" | sudo tee Arkbuild_package_cache/${CHIPSET}/flycastsa.commit > /dev/null
 fi
 
 sudo mkdir -p Arkbuild/home/ark/.config/flycast

@@ -44,6 +44,9 @@ export BUILD_ARMHF=y
 # Enable Bluetooth support (BlueALSA + UI) by default — USB dongle required
 export BUILD_BLUEALSA=${BUILD_BLUEALSA:-y}
 
+# Build custom ffmpeg with Rockchip MPP/RGA hardware video decode by default
+export BUILD_RKMPP_FFMPEG=${BUILD_RKMPP_FFMPEG:-y}
+
 # Debian codename to use (Trixie matches upstream dArkOS package lists)
 export DEBIAN_CODE_NAME=trixie
 
@@ -111,6 +114,9 @@ source ./build_dolphinsa.sh
 source ./build_sdljoytest.sh
 source ./build_controllertester.sh
 source ./build_drastic.sh
+if [[ "${BUILD_RKMPP_FFMPEG}" == "y" ]]; then
+  source ./build_ffmpeg.sh
+fi
 if [[ "${BUILD_KODI}" == "y" ]]; then
   source ./build_kodi.sh
 fi

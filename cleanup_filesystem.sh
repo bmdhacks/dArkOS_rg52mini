@@ -8,6 +8,11 @@ call_chroot "rm -rf /home/ark/linux-rga"
 call_chroot "rm -rf /home/ark/${CHIPSET}_core_builds"
 # Remove SDL 1.2 headers installed to /usr/local by sdl12-compat (linapplesa build)
 sudo rm -rf Arkbuild/usr/local/include/SDL/
+
+# Pin our custom rkmpp/rkrga ffmpeg so apt upgrades don't replace it.
+if [[ "$BUILD_RKMPP_FFMPEG" == "y" ]]; then
+  call_chroot "apt-mark hold ffmpeg"
+fi
 call_chroot "apt remove -y autotools-dev \
   build-essential \
   ccache \
@@ -64,6 +69,7 @@ call_chroot "apt remove -y autotools-dev \
   libvorbis-dev \
   libvorbisidec-dev \
   libvpx-dev \
+  libvulkan-dev \
   libx11-dev \
   libx11-xcb1 \
   libxcb-dri2-0 \
@@ -100,6 +106,11 @@ fi
 
 while read NEEDED_PACKAGE; do
   if [[ ! "$NEEDED_PACKAGE" =~ ^# ]]; then
+    # Skip apt's ffmpeg when we built our own rkmpp ffmpeg, otherwise this
+    # loop reinstalls it and overwrites our custom binaries/libraries.
+    if [[ "$BUILD_RKMPP_FFMPEG" == "y" ]] && [[ "$NEEDED_PACKAGE" == "ffmpeg" ]]; then
+      continue
+    fi
     install_package 64 ${NEEDED_PACKAGE}
     protect_package 64 ${NEEDED_PACKAGE}
   fi
@@ -151,6 +162,12 @@ do
   sudo ln -sfv libMali.so ${LIB}
 done
 cd ../../../../
+
+# build_ffmpeg.sh installs the rkrga librga to /usr/lib (meson default) but the
+# dynamic linker only looks in the multiarch path. Mirror both copies.
+if [[ "$BUILD_RKMPP_FFMPEG" == "y" ]] && ls Arkbuild/usr/lib/librga.so* >/dev/null 2>&1; then
+  sudo cp -av Arkbuild/usr/lib/librga.so* Arkbuild/usr/lib/aarch64-linux-gnu/
+fi
 
 if [[ "${ENABLE_CACHE}" == "y" ]]; then
   sudo rm -f Arkbuild/etc/apt/apt.conf.d/99proxy

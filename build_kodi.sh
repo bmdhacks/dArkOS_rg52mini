@@ -14,6 +14,12 @@ while read KODI_NEEDED_DEV_PACKAGE; do
     install_package 64 "${KODI_NEEDED_DEV_PACKAGE}"
   fi
 done <kodi_needed_dev_packages.txt
+# Kodi links against libavcodec/libavformat/etc — make sure our rkmpp ffmpeg
+# libraries are in place before the Kodi build. Skip if BUILD_RKMPP_FFMPEG=y
+# already ran build_ffmpeg.sh from the master script.
+if [[ "$BUILD_RKMPP_FFMPEG" == "y" ]] && [ ! -f Arkbuild/usr/lib/aarch64-linux-gnu/librockchip_mpp.so.1 ]; then
+  source ./build_ffmpeg.sh
+fi
 call_chroot "cd /home/ark &&
   mkdir -p kodi &&
   cd kodi &&

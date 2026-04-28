@@ -42,6 +42,7 @@ libvlc-dev
 libvlccore-dev
 libvorbisidec-dev
 libvpx-dev
+libvulkan-dev
 libzip-dev
 ninja-build
 pkg-config

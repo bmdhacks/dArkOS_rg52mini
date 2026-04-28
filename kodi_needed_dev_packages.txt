@@ -8,6 +8,10 @@ libasound2-dev
 libass-dev
 libavahi-client-dev
 libavahi-common-dev
+libavcodec-dev
+libavfilter-dev
+libavformat-dev
+libavutil-dev
 libbluetooth-dev
 libbluray-dev
 libbz2-dev
@@ -40,6 +44,7 @@ libgif-dev
 libgles2-mesa-dev
 libgl1-mesa-dev
 libglu1-mesa-dev
+libgbm-dev
 libgmp10
 libgmp-dev
 libgnutls28-dev
@@ -62,6 +67,7 @@ libogg-dev
 libplist-2.0-4
 libplist-dev
 libpng-dev
+libpostproc-dev
 libpulse-dev
 libp8-platform-dev
 libshairplay0
@@ -72,6 +78,8 @@ libspdlog1.15
 libspdlog-dev
 libsqlite3-dev
 libssl-dev
+libswscale-dev
+libswresample-dev
 libtag2
 libtag-dev
 libtiff5-dev

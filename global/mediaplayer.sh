@@ -11,7 +11,23 @@ if [[ ! -z $(cat /etc/emulationstation/es_input.cfg | grep "190000004b4800000010
   export HOTKEY="l3"
 fi
 /opt/inttools/gptokeyb -1 "ffplay" -c "/opt/inttools/mediaplayer.gptk" &
-ffplay -loglevel +quiet -seek_interval 1 -loop 0 -x "$xres" -y "$yres" "$1"
+# Use Rockchip MPP hardware decoder when our custom rkmpp ffmpeg is installed.
+if compgen -G "/usr/lib/aarch64-linux-gnu/librockchip_mpp.so*" > /dev/null; then
+  format=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$1")
+  case "$format" in
+    *h263*) codec="h263_rkmpp" ;;
+    *h264*) codec="h264_rkmpp" ;;
+    *hevc*) codec="hevc_rkmpp" ;;
+    *)      codec="" ;;
+  esac
+  if [ -n "$codec" ]; then
+    ffplay -loglevel +quiet -seek_interval 1 -loop 0 -x "$xres" -y "$yres" -vcodec "$codec" "$1"
+  else
+    ffplay -loglevel +quiet -seek_interval 1 -loop 0 -x "$xres" -y "$yres" "$1"
+  fi
+else
+  ffplay -loglevel +quiet -seek_interval 1 -loop 0 -x "$xres" -y "$yres" "$1"
+fi
 unset SDL_GAMECONTROLLERCONFIG_FILE
 if [[ ! -z $(pidof gptokeyb) ]]; then
   sudo kill -9 $(pidof gptokeyb)
