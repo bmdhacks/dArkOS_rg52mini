@@ -1824,9 +1824,9 @@
 		<fullname>Sony Playstation 2</fullname>
 		<path>/roms/ps2/</path>
 		<extension>.iso .ISO .chd .CHD .cso .CSO .gz .GZ .bin .BIN .mdf .MDF .nrg .NRG .img .IMG .dump .DUMP</extension>
-		<command>sudo perfmax %GOVERNOR% %ROM%; nice -n -19 /usr/local/bin/standalone-aethersx2 %EMULATOR% %ROM%; sudo perfnorm</command>
+		<command>sudo perfmax %GOVERNOR% %ROM%; nice -n -19 /usr/local/bin/standalone-pcsx2sa %EMULATOR% %ROM%; sudo perfnorm</command>
 		<emulators>
-			<emulator name="standalone-aethersx2">
+			<emulator name="standalone-pcsx2sa">
 		      </emulator>
 		</emulators>
 		<platform>ps2</platform>

@@ -72,10 +72,11 @@ fi
 
 source ./build_deps.sh
 source ./build_sdl2.sh
+source ./build_sdl3shim.sh
 source ./build_ppssppsa.sh
 source ./build_ppsspp-2021sa.sh
 source ./build_duckstationsa.sh
-source ./build_aethersx2sa.sh
+source ./build_pcsx2sa.sh
 source ./build_mupen64plussa.sh
 source ./build_gzdoom.sh
 source ./build_lzdoom.sh
