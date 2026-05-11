@@ -85,6 +85,7 @@ pico-8/carts
 piece
 pokemonmini
 ports
+ps2
 psp
 pspminis
 psx

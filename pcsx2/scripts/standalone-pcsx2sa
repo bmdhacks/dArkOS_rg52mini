@@ -1,0 +1,72 @@
+#!/bin/bash
+#
+# PCSX2 (bmdhacks fork, SDL3 frontend) launcher for dArkOS (RK3562 / KMSDRM).
+#
+# The fork's pcsx2-sdl binary uses WindowInfo::Type::VulkanDirect and creates
+# its own VK_KHR_display surface — there is no Qt and no compositor.  SDL3
+# is used only for input pumping, audio, and the event loop, and is supplied
+# by the SDL3-on-SDL2 shim at /opt/sdl3-shim/lib/libSDL3.so.0.  At runtime
+# the shim dlopens the system libSDL2-2.0.so.0 (selected via SDL3SHIM_SDL2_LIB)
+# whose own KMSDRM+RGA rotation path drives the actual display.
+#
+# ES invokes us as:  standalone-pcsx2sa %EMULATOR% %ROM%
+# so the ROM path is "$2".
+
+ROM="$2"
+
+# Per-device speaker/codec quirks — restore on exit (matches ppsspp.sh)
+DEVICE="$(cat /home/ark/.config/.DEVICE 2>/dev/null)"
+
+# Derive the ROMs partition mount point from the ROM path (matches PPSSPP
+# convention: ROMs partition holds all writeable per-system data).  For a ROM
+# at /roms/ps2/foo.iso this gives directory=roms.
+directory=$(dirname "$ROM" | cut -d "/" -f2)
+
+# All PCSX2 user data lives on the ROMs partition under <mount>/ps2/.  The
+# uppercase PCSX2 dir is what pcsx2-sdl uses (XDG_CONFIG_HOME/PCSX2); we
+# symlink the system path to the ROMs partition so saves, configs, BIOS
+# discovery and shader caches all land on the big exFAT partition.
+mkdir -p "/$directory/ps2/bios"
+mkdir -p "/$directory/ps2/memcards"
+mkdir -p "/$directory/ps2/savestates"
+mkdir -p "/$directory/ps2/pcsx2/inis"
+mkdir -p "/$directory/ps2/pcsx2/cache"
+ln -sfn "/$directory/ps2/pcsx2" /home/ark/.config/PCSX2
+
+# Seed the per-device PCSX2.ini template into the user dir if absent.
+# (The template lives under /opt/pcsx2/templates/ and is generated per-UNIT
+# by build_pcsx2sa.sh.)
+if [ ! -f "/$directory/ps2/pcsx2/inis/PCSX2.ini" ] && \
+   [ -f /opt/pcsx2/templates/PCSX2.ini ]; then
+    cp /opt/pcsx2/templates/PCSX2.ini "/$directory/ps2/pcsx2/inis/PCSX2.ini"
+fi
+
+# Tell the killer daemon how to terminate us on hotkey
+echo "VAR=pcsx2-sdl" > /home/ark/.config/KILLIT
+sudo systemctl restart killer_daemon.service
+
+# --- SDL3 shim + PCSX2 lib path ---
+export LD_LIBRARY_PATH=/opt/sdl3-shim/lib:/opt/pcsx2/lib:/usr/local/lib
+# The SDL3 shim picks up the system SDL2 from this path at runtime.
+export SDL3SHIM_SDL2_LIB=/usr/lib/aarch64-linux-gnu/libSDL2-2.0.so.0
+export SDL_VIDEODRIVER=kmsdrm
+export SDL_AUDIODRIVER=alsa
+
+# Portrait rotation is handled by the Vulkan present-time rotation path
+# inside pcsx2-sdl (DisplayRotation key in PCSX2.ini, set per-UNIT during
+# the build).  Nothing to do here.
+
+# Run the SDL frontend with the ROM path as a positional arg.
+# (pcsx2-sdl's argv parser does not accept -fullscreen or the -- separator;
+# fullscreen is implied / configured via PCSX2.ini.)
+/opt/pcsx2/bin/pcsx2-sdl "$ROM"
+
+# Cleanup
+sudo systemctl stop killer_daemon.service
+
+# Restore RK817 codec state after emulator exit (RK3562 devices) —
+# pcsx2-sdl (like PPSSPP) can leave the audio path in a bad state.
+if [ "$DEVICE" = "RG56PRO" ] || [ "$DEVICE" = "RG52MINI" ] || [ "$DEVICE" = "RG43H" ]; then
+    amixer -q sset 'Playback Path' HP 2>/dev/null
+    amixer -q sset 'Resume Path' ON 2>/dev/null
+fi
