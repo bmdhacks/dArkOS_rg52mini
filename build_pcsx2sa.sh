@@ -17,7 +17,7 @@ if [ "$CHIPSET" != "rk3562" ]; then
 fi
 
 PCSX2_REMOTE="https://git.sr.ht/~bmdhacks/pcsx2"
-PCSX2_BRANCH="feature/sdl-frontend"
+PCSX2_BRANCH="tokyo-sync"
 PCSX2_SRC="Arkbuild/home/ark/pcsx2"
 PCSX2_BUILD="/home/ark/pcsx2/build-${UNIT}"
 
@@ -57,6 +57,12 @@ if [ ! -f "Arkbuild/opt/pcsx2/bin/pcsx2-sdl" ]; then
     # to armv8-a and rely on -moutline-atomics to handle locked operations
     # via runtime-dispatched libgcc helpers.
     sed -i 's/"-march=armv8.1-a"/"-march=armv8-a"/' "${PCSX2_SRC}/cmake/BuildParameters.cmake"
+
+    # PCSX2's FindShaderc.cmake only knows the upstream Khronos library
+    # name (libshaderc_shared.so), but Debian's libshaderc-dev ships it
+    # as plain libshaderc.so / libshaderc.so.1.  Teach the find module
+    # to accept the Debian naming too.
+    sed -i 's/NAMES shaderc_shared.1 shaderc_shared/NAMES shaderc_shared.1 shaderc_shared shaderc.1 shaderc/' "${PCSX2_SRC}/cmake/FindShaderc.cmake"
 
     # Build plutovg/plutosvg as prereqs — Trixie doesn't ship them and the
     # fork doesn't vendor them.
@@ -106,6 +112,7 @@ if [ ! -f "Arkbuild/opt/pcsx2/bin/pcsx2-sdl" ]; then
             -DENABLE_SDL_FRONTEND=ON \
             -DENABLE_QT_UI=OFF \
             -DUSE_VULKAN=ON -DUSE_OPENGL=ON \
+            -DUSE_BACKTRACE=OFF \
             -DX11_API=OFF -DWAYLAND_API=OFF \
             -DOVERRIDE_HOST_PAGE_SIZE=4096 \
             -DCMAKE_C_FLAGS='-march=armv8-a -moutline-atomics -O3' \
@@ -114,7 +121,11 @@ if [ ! -f "Arkbuild/opt/pcsx2/bin/pcsx2-sdl" ]; then
             -DCMAKE_INSTALL_RPATH='/opt/sdl3-shim/lib;/opt/pcsx2/lib' &&
         ninja -j\$(nproc) &&
         ninja install &&
-        strip /opt/pcsx2/bin/pcsx2-sdl 2>/dev/null || true
+        strip /opt/pcsx2/bin/pcsx2-sdl 2>/dev/null || true &&
+        mkdir -p /opt/pcsx2/share/PCSX2 &&
+        cp -a /home/ark/pcsx2/bin/resources /opt/pcsx2/share/PCSX2/ &&
+        mkdir -p /opt/pcsx2/lib &&
+        ln -sf /usr/lib/aarch64-linux-gnu/libshaderc.so.1 /opt/pcsx2/lib/libshaderc_shared.so.1
     "
     verify_action
 
@@ -128,17 +139,14 @@ if [ ! -f "Arkbuild/opt/pcsx2/bin/pcsx2-sdl" ]; then
     echo "${CACHE_KEY}" > "Arkbuild_package_cache/${CHIPSET}/pcsx2sa_${UNIT}.commit"
 fi
 
-# Seed the per-UNIT PCSX2.ini template (controls DisplayRotation among
-# other things) and the launcher wrapper.
+# Install the per-UNIT PCSX2.ini template — the launcher copies it into
+# /roms/ps2/pcsx2/inis/PCSX2.ini on first run (PPSSPP convention: all per-
+# system writeable data lives on the ROMs partition, not in the rootfs).
 sudo mkdir -p Arkbuild/opt/pcsx2/templates
 sudo cp "pcsx2/configs/PCSX2.ini.${UNIT}" Arkbuild/opt/pcsx2/templates/PCSX2.ini
-
-sudo mkdir -p Arkbuild/home/ark/.config/pcsx2/inis
-sudo cp "pcsx2/configs/PCSX2.ini.${UNIT}" Arkbuild/home/ark/.config/pcsx2/inis/PCSX2.ini
 
 sudo cp pcsx2/scripts/standalone-pcsx2sa Arkbuild/usr/local/bin/standalone-pcsx2sa
 sudo chmod 755 Arkbuild/usr/local/bin/standalone-pcsx2sa
 
 call_chroot "chown -R ark:ark /opt/pcsx2"
-call_chroot "chown -R ark:ark /home/ark/.config/pcsx2"
 sudo chmod 755 Arkbuild/opt/pcsx2/bin/pcsx2-sdl
