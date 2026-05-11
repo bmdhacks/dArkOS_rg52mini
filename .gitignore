@@ -1,2 +1,19 @@
 CLAUDE.md
 exports.sh
+
+# Build outputs and caches
+Arkbuild/
+Arkbuild32/
+Arkbuild_ccache/
+Arkbuild_package_cache/
+build.log
+build.log.*
+dArkOS_*_trixie_*.img
+dArkOS_*_trixie_*.img.7z*
+
+# Mali tarball extraction artifacts
+BSP/mali/
+BSP/mali32/
+
+# Stale DTB backups (DTBs are now built from DTS source in the kernel tree)
+BSP/*.dtb.bak
