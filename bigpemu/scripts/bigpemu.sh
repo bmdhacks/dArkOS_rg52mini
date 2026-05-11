@@ -18,7 +18,7 @@ if [[ ! -d "/$directory/atarijaguar/.bigpemu_userdata" ]]; then
 fi
 
 rm -rf /home/ark/.bigpemu_userdata
-ln -s /$directory/atarijaguar/.bigpemu_userdata
+ln -s /$directory/atarijaguar/.bigpemu_userdata /home/ark/.bigpemu_userdata
 
 echo "VAR=bigpemu" > /home/ark/.config/KILLIT
 sudo systemctl restart killer_daemon.service

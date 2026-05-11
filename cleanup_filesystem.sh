@@ -34,6 +34,7 @@ call_chroot "apt remove -y autotools-dev \
   libxext-dev \
   libfaad-dev \
   libflac-dev \
+  libfontconfig1-dev \
   libfreeimage-dev \
   libfreetype-dev \
   libfribidi-dev \

@@ -21,6 +21,20 @@ if  [[ $1 == "standalone" ]]; then
   if [ $xres -ge "1280" ]; then
     HDMI="/usr/lib/aarch64-linux-gnu/libSDL2-2.0.so.0.10.0"
   fi
+  # On low-memory devices (RG43H Pro = 1GB), enable a 1G zram swap so PPSSPP
+  # has somewhere to spill when running with the Vulkan backend.  Skipped on
+  # 2GB+ devices, and skipped if zram is already active.
+  if [[ "$(free -m | awk '/^Mem:/{print $2}')" -lt "1900" ]]; then
+    if [[ -z "$(zramctl)" ]]; then
+      printf "Enabling zram.  Please wait...\n" >> /dev/tty1
+      sudo modprobe zram num_devices=1
+      echo lz4 | sudo tee /sys/block/zram0/comp_algorithm
+      echo 1G | sudo tee /sys/block/zram0/disksize
+      sudo mkswap /dev/zram0
+      sudo swapon /dev/zram0 -p 5
+      printf "Launching ppsspp emulation now" >> /dev/tty1
+    fi
+  fi
   LD_PRELOAD="$HDMI" /opt/ppsspp/PPSSPPSDL --fullscreen "$2"
   cp -f /$directory/psp/ppsspp/PSP/SYSTEM/ppsspp.ini /$directory/psp/ppsspp/PSP/SYSTEM/ppsspp.ini.sdl
   sudo systemctl stop killer_daemon.service

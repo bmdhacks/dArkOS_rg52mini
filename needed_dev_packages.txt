@@ -18,7 +18,7 @@ libdrm-dev
 libeigen3-dev
 libevdev-dev
 libfmt-dev
-libfontconfig-dev
+libfontconfig1-dev
 libfreeimage-dev
 libfreetype-dev
 libinih-dev

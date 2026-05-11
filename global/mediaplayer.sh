@@ -15,10 +15,17 @@ fi
 if compgen -G "/usr/lib/aarch64-linux-gnu/librockchip_mpp.so*" > /dev/null; then
   format=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$1")
   case "$format" in
-    *h263*) codec="h263_rkmpp" ;;
-    *h264*) codec="h264_rkmpp" ;;
-    *hevc*) codec="hevc_rkmpp" ;;
-    *)      codec="" ;;
+    *av1*)   codec="av1_rkmpp" ;;
+    *h263*)  codec="h263_rkmpp" ;;
+    *h264*)  codec="h264_rkmpp" ;;
+    *hevc*)  codec="hevc_rkmpp" ;;
+    *mjpeg*) codec="mjpeg_rkmpp" ;;
+    *mpeg1*) codec="mpeg1_rkmpp" ;;
+    *mpeg2*) codec="mpeg2_rkmpp" ;;
+    *mpeg4*) codec="mpeg4_rkmpp" ;;
+    *vp8*)   codec="vp8_rkmpp" ;;
+    *vp9*)   codec="vp9_rkmpp" ;;
+    *)       codec="" ;;
   esac
   if [ -n "$codec" ]; then
     ffplay -loglevel +quiet -seek_interval 1 -loop 0 -x "$xres" -y "$yres" -vcodec "$codec" "$1"

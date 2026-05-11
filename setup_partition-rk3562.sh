@@ -13,11 +13,22 @@
 
 ROOT_FILESYSTEM_FORMAT="btrfs"
 if [ "$ROOT_FILESYSTEM_FORMAT" == "xfs" ] || [ "$ROOT_FILESYSTEM_FORMAT" == "btrfs" ]; then
-  ROOT_FILESYSTEM_FORMAT_PARAMETERS="-f -L ROOTFS"
   if [ "$ROOT_FILESYSTEM_FORMAT" != "btrfs" ]; then
+    ROOT_FILESYSTEM_FORMAT_PARAMETERS="-f -L ROOTFS"
     ROOT_FILESYSTEM_MOUNT_OPTIONS="defaults,noatime"
   else
-    ROOT_FILESYSTEM_MOUNT_OPTIONS="defaults,noatime,compress=zstd"
+    # Disable free-space-tree — some btrfs-progs versions list it as a
+    # filesystem feature (-O), others as a runtime feature (-R).  Without
+    # this, mounting fails with "no space left on device" when the volume
+    # is shrunk after build.
+    if sudo mkfs.btrfs -O list-all 2>&1 | grep -q "free-space-tree"; then
+      ROOT_FILESYSTEM_FORMAT_PARAMETERS="-O ^free-space-tree -f -L ROOTFS"
+    elif sudo mkfs.btrfs -R list-all 2>&1 | grep -q "free-space-tree"; then
+      ROOT_FILESYSTEM_FORMAT_PARAMETERS="-R ^free-space-tree -f -L ROOTFS"
+    else
+      ROOT_FILESYSTEM_FORMAT_PARAMETERS="-f -L ROOTFS"
+    fi
+    ROOT_FILESYSTEM_MOUNT_OPTIONS="defaults,noatime,compress=zstd:1"
   fi
 elif [[ "$ROOT_FILESYSTEM_FORMAT" == *"ext"* ]]; then
   # Disable ext4 features not supported by the BSP kernel (5.10.226):

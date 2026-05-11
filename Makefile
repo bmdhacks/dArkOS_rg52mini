@@ -7,12 +7,18 @@ BUILD_ARMHF ?= y
 BUILD_BLUEALSA ?= y
 BUILD_RKMPP_FFMPEG ?= y
 
+# Ensure system binaries like parted are in PATH, and silence strict GCC warnings
+PATH := $(PATH):/usr/sbin:/sbin
+KCFLAGS := -w
+
 export DEBIAN_CODE_NAME
 export ENABLE_CACHE
 export BUILD_KODI
 export BUILD_ARMHF
 export BUILD_BLUEALSA
 export BUILD_RKMPP_FFMPEG
+export PATH
+export KCFLAGS
 
 ifeq ($(DEBIAN_CODE_NAME),)
   $(error DEBIAN_CODE_NAME is not set. Please run with DEBIAN_CODE_NAME=suite (e.g., trixie))

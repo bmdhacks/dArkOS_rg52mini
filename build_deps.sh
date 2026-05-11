@@ -93,8 +93,11 @@ do
       sudo ln -sf $(basename ${MALI_REAL}) libMali.so
     )
   else
-    # Download Mali from core_builds repo (rk3566, rk3326, etc.)
-    wget -t 3 -T 60 --no-check-certificate https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/raw/refs/heads/master/mali/${FOLDER}/${MALI_BLOB}
+    # Download Mali from core_builds repo (rk3566, rk3326, etc.).  Force the
+    # output filename with -O — without it, wget appends .1 if a stale file
+    # is present and the subsequent mv silently fails, leaving libEGL.so
+    # dangling and breaking the libgo2 + EmulationStation build downstream.
+    wget -t 3 -T 60 --no-check-certificate -O ${MALI_BLOB} https://github.com/christianhaitian/${CORE_BUILDS_CHIPSET}_core_builds/raw/refs/heads/master/mali/${FOLDER}/${MALI_BLOB}
     sudo mv ${MALI_BLOB} Arkbuild/usr/lib/${ARCHITECTURE}/.
     (
       cd Arkbuild/usr/lib/${ARCHITECTURE}
@@ -119,7 +122,7 @@ sudo chroot Arkbuild/ ldconfig
 # ES gets g13p0 via LD_LIBRARY_PATH (g24p0 has broken GLES 1.0 glDrawArrays).
 if [ "$CHIPSET" == "rk3562" ]; then
   sudo mkdir -p Arkbuild/opt/emulationstation/lib
-  wget -t 3 -T 60 --no-check-certificate \
+  wget -t 3 -T 60 --no-check-certificate -O libmali-bifrost-g52-g13p0-gbm.so \
     https://github.com/christianhaitian/rk3566_core_builds/raw/refs/heads/master/mali/aarch64/libmali-bifrost-g52-g13p0-gbm.so \
     || { echo "FATAL: Failed to download g13p0 Mali for ES"; exit 1; }
   sudo mv libmali-bifrost-g52-g13p0-gbm.so Arkbuild/opt/emulationstation/lib/libmali.so

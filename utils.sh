@@ -6,10 +6,18 @@ BUILD_DATE=$(date "+%m%d%Y")
 # Set http/https buffer to over 500MB to minimize on possible git clone infinite hangs
 git config --global http.postBuffer 524288000
 
-# Verify the correct toolchain is available
-if [ ! -d "/opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu" ]; then
-  sudo mkdir -p /opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu
-  git clone --depth=1 https://github.com/christianhaitian/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu.git /opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu
+# Verify the correct toolchain is available.  Fall back to a local clone
+# under ./prebuilts/ if /opt/toolchains exists but isn't writeable by the
+# current user (common when an old root-owned attempt left it that way).
+OPT_TOOLCHAIN_DIR="/opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu"
+LOCAL_TOOLCHAIN_DIR="prebuilts/gcc/linux-x86/aarch64/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu"
+
+if [ -d "$OPT_TOOLCHAIN_DIR" ]; then
+  : # already installed system-wide
+elif [ ! -d "$LOCAL_TOOLCHAIN_DIR" ]; then
+  echo "Toolchain not found.  Cloning Linaro toolchain to $LOCAL_TOOLCHAIN_DIR..."
+  mkdir -p "$LOCAL_TOOLCHAIN_DIR"
+  git clone --depth=1 https://github.com/christianhaitian/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu.git "$LOCAL_TOOLCHAIN_DIR"
   verify_action
 fi
 
@@ -21,7 +29,11 @@ fi
 # Setup the necessary exports
 export ARCH=arm64
 export CROSS_COMPILE=aarch64-linux-gnu-
-export PATH=/opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/:$PATH
+if [ -d "$OPT_TOOLCHAIN_DIR" ]; then
+  export PATH="$OPT_TOOLCHAIN_DIR"/bin/:$PATH
+else
+  export PATH="$LOCAL_TOOLCHAIN_DIR"/bin/:$PATH
+fi
 if [ "$CHIPSET" == "rk3326" ]; then
   export whichmali=libmali-bifrost-g31-rxp0-gbm.so
 elif [ "$CHIPSET" == "rk3562" ]; then

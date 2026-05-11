@@ -137,6 +137,11 @@ install_lib \
     "http://archive.debian.org/debian/pool/main/c/codec2/libcodec2-0.8.1_0.8.1-2_arm64.deb" \
     "libcodec2.so.0.8.1" "libcodec2.so.0.8.1"
 
+# libsrt-gnutls.so.1.4 (1.4.2, Debian 11 Bullseye) - PortMaster compatibility
+install_lib \
+    "http://ftp.us.debian.org/debian/pool/main/s/srt/libsrt1.4-gnutls_1.4.2-1.3_arm64.deb" \
+    "libsrt-gnutls.so.1.4.2" "libsrt-gnutls.so.1.4.2"
+
 # libssh-gcrypt4 (0.8.7, Debian 10 Buster) - PortMaster compatibility
 install_lib \
     "http://archive.debian.org/debian/pool/main/libs/libssh/libssh-gcrypt-4_0.8.7-1+deb10u1_arm64.deb" \
